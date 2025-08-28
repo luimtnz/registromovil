@@ -1,70 +1,130 @@
-# Getting Started with Create React App
+# 📱 Registro Móvil - Sistema de Gestión
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Sistema de gestión integral para tiendas de venta y reparación de equipos móviles, desarrollado en React con Material-UI.
 
-## Available Scripts
+## 🎯 Funcionalidades Principales
 
-In the project directory, you can run:
+### **Gestión de Ventas**
+- Registro de equipos por IMEI
+- Captura de datos del cliente (nombre, teléfono, email)
+- Registro de distribuidores
+- Seguimiento del estado de ventas
 
-### `npm start`
+### **Gestión de Reparaciones**
+- Registro de equipos para reparación
+- Captura de marca, modelo y motivo de reparación
+- Control de estados: En Reparación, Pendiente, Entregado
+- Inventario de reparaciones activas
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### **Inventario y Control**
+- Vista completa del inventario de equipos
+- Filtros por tipo (venta/reparación) y estado
+- Búsqueda por IMEI, marca, modelo o cliente
+- Estadísticas y resúmenes del negocio
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🚀 Tecnologías Utilizadas
 
-### `npm test`
+- **Frontend**: React 18.3.1
+- **UI Framework**: Material-UI (MUI) v5.16.7
+- **Routing**: React Router DOM v6.26.1
+- **Estilos**: Emotion (styled components)
+- **Build Tool**: Create React App
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 📁 Estructura del Proyecto
 
-### `npm run build`
+```
+src/
+├── components/          # Componentes de la aplicación
+│   ├── Dashboard.js    # Panel principal con estadísticas
+│   ├── UserRegister.js # Registro de equipos móviles
+│   ├── Inventory.js    # Gestión del inventario
+│   ├── Sidebar.js      # Navegación lateral
+│   ├── Login.js        # Autenticación
+│   └── Register.js     # Registro de usuarios
+├── App.js              # Componente raíz y enrutamiento
+└── index.js            # Punto de entrada
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 🛠️ Instalación y Uso
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Prerrequisitos
+- Node.js (versión 14 o superior)
+- npm o yarn
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Instalación
+```bash
+# Clonar el repositorio
+git clone [url-del-repositorio]
 
-### `npm run eject`
+# Instalar dependencias
+npm install
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# Ejecutar en modo desarrollo
+npm start
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Construir para producción
+npm run build
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Scripts Disponibles
+- `npm start` - Ejecuta la aplicación en modo desarrollo
+- `npm test` - Ejecuta las pruebas
+- `npm run build` - Construye la aplicación para producción
+- `npm run eject` - Expone la configuración de webpack (irreversible)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 📱 Características del Sistema
 
-## Learn More
+### **Registro de Equipos**
+- **Ventas**: IMEI, marca, modelo, datos del cliente
+- **Reparaciones**: IMEI, marca, modelo, motivo, estado
+- **Distribuidores**: Solo IMEI y nombre del distribuidor
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### **Estados de Equipos**
+- **Ventas**: Vendido, En Inventario
+- **Reparaciones**: En Reparación, Pendiente, Entregado
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### **Dashboard Inteligente**
+- Estadísticas en tiempo real
+- Resumen de ventas y reparaciones
+- Equipos recientes
+- Acciones rápidas
 
-### Code Splitting
+## 🔧 Configuración
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+La aplicación está configurada para funcionar inmediatamente después de la instalación. Para personalizar:
 
-### Analyzing the Bundle Size
+1. **Colores y temas**: Modificar en `src/App.css`
+2. **Rutas**: Configurar en `src/App.js`
+3. **Componentes**: Editar en `src/components/`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 📊 Próximas Funcionalidades
 
-### Making a Progressive Web App
+- [ ] Sistema de autenticación completo
+- [ ] Base de datos y API backend
+- [ ] Reportes y exportación de datos
+- [ ] Notificaciones y alertas
+- [ ] Gestión de clientes avanzada
+- [ ] Sistema de facturación
+- [ ] App móvil (React Native)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## 🤝 Contribución
 
-### Advanced Configuration
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 📄 Licencia
 
-### Deployment
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 📞 Soporte
 
-### `npm run build` fails to minify
+Para soporte técnico o consultas:
+- Crear un issue en el repositorio
+- Contactar al equipo de desarrollo
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
+
+**Desarrollado con ❤️ para la gestión eficiente de equipos móviles**
