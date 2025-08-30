@@ -180,8 +180,8 @@ function Clients() {
         }
       },
       equipment: [
-        {
-          id: 4,
+    {
+      id: 4,
           imei: '555666777888999',
           brand: 'Xiaomi',
           model: 'Redmi Note 10',
@@ -405,24 +405,24 @@ function Clients() {
                 const nextTier = calculateNextTier(client.loyaltyPoints);
                 return (
                   <TableRow key={client.id} hover>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar sx={{ bgcolor: client.type === 'business' ? 'primary.main' : 'secondary.main' }}>
                           {client.type === 'business' ? <Business /> : client.name.charAt(0)}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="body1" fontWeight="bold">
+                      </Avatar>
+                      <Box>
+                        <Typography variant="body1" fontWeight="bold">
                             {client.name}
-                          </Typography>
-                          <Typography variant="caption" color="textSecondary">
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary">
                             {client.email}
                           </Typography>
                           <Typography variant="caption" display="block" color="textSecondary">
                             {client.phone}
-                          </Typography>
-                        </Box>
+                        </Typography>
                       </Box>
-                    </TableCell>
+                    </Box>
+                  </TableCell>
                     <TableCell>
                       <Chip
                         label={client.type === 'business' ? 'Empresa' : 'Individual'}
@@ -431,8 +431,8 @@ function Clients() {
                         icon={client.type === 'business' ? <Business /> : <PersonAdd />}
                       />
                     </TableCell>
-                    <TableCell>
-                      <Box>
+                  <TableCell>
+                    <Box>
                         <Chip
                           label={getTierName(client.tier)}
                           color={getTierColor(client.tier)}
@@ -445,51 +445,51 @@ function Clients() {
                         {nextTier && (
                           <Typography variant="caption" display="block" color="primary">
                             {nextTier.pointsNeeded} pts para {getTierName(nextTier.tier)}
-                          </Typography>
+                        </Typography>
                         )}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
                       <Box sx={{ textAlign: 'center' }}>
                         <Typography variant="h6" color="primary">
                           {client.loyaltyPoints.toLocaleString()}
                         </Typography>
                         <Typography variant="caption" color="textSecondary">
                           pts
-                        </Typography>
+                    </Typography>
                       </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ textAlign: 'center' }}>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ textAlign: 'center' }}>
                         <Typography variant="h6" color="success.main">
                           {client.totalPurchases}
-                        </Typography>
-                        <Typography variant="caption" color="textSecondary">
-                          compras
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        compras
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
                       <Typography variant="body2" fontWeight="bold" color="primary">
                         {formatPrice(client.totalSpent)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
                       <Typography variant="body2">
                         {client.registrationDate}
                       </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Tooltip title="Ver detalles">
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Tooltip title="Ver detalles">
                           <IconButton 
                             size="small" 
                             color="primary"
                             onClick={() => handleClientDetails(client)}
                           >
-                            <Visibility />
-                          </IconButton>
-                        </Tooltip>
+                          <Visibility />
+                        </IconButton>
+                      </Tooltip>
                         <Tooltip title="WhatsApp">
                           <IconButton 
                             size="small" 
@@ -513,11 +513,11 @@ function Clients() {
                             )}
                           >
                             <Email />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
                 );
               })}
             </TableBody>
@@ -536,18 +536,18 @@ function Clients() {
                   <CardContent sx={{ textAlign: 'center', p: 2 }}>
                     <Typography variant="h4" color={info.color === 'default' ? 'text.primary' : info.color}>
                       {clients.filter(c => c.tier === tier).length}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
+          </Typography>
+              <Typography variant="body2" color="textSecondary">
                       {info.name}
                     </Typography>
                     <Typography variant="caption" color="primary">
                       {info.discount} descuento
-                    </Typography>
+              </Typography>
                   </CardContent>
                 </Card>
               </Grid>
             ))}
-          </Grid>
+            </Grid>
         </Box>
       </Paper>
 
@@ -565,7 +565,7 @@ function Clients() {
             </Avatar>
             <Typography variant="h6">
               {selectedClient?.name}
-            </Typography>
+              </Typography>
           </Box>
         </DialogTitle>
         <DialogContent>
@@ -644,7 +644,7 @@ function Clients() {
                       </ListItem>
                     </List>
                   </Grid>
-                </Grid>
+            </Grid>
               )}
 
               {activeTab === 1 && (
@@ -710,7 +710,7 @@ function Clients() {
                           <Box sx={{ textAlign: 'right' }}>
                             <Typography variant="body2" fontWeight="bold">
                               {formatPrice(repair.cost)}
-                            </Typography>
+              </Typography>
                             <Chip 
                               label={repair.status} 
                               color={repair.status === 'completed' ? 'success' : 'warning'}
@@ -723,7 +723,7 @@ function Clients() {
                   ) : (
                     <Typography variant="body2" color="textSecondary" align="center">
                       No hay reparaciones registradas
-                    </Typography>
+              </Typography>
                   )}
                 </Box>
               )}
@@ -739,7 +739,7 @@ function Clients() {
                           <Chip key={index} label={brand} size="small" />
                         ))}
                       </Box>
-                    </Grid>
+            </Grid>
                     <Grid item xs={12} md={6}>
                       <Typography variant="subtitle1" gutterBottom>Categorías Preferidas</Typography>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -747,7 +747,7 @@ function Clients() {
                           <Chip key={index} label={category} size="small" />
                         ))}
                       </Box>
-                    </Grid>
+            </Grid>
                     <Grid item xs={12}>
                       <Typography variant="subtitle1" gutterBottom>Notificaciones</Typography>
                       <Box sx={{ display: 'flex', gap: 2 }}>
@@ -779,9 +779,9 @@ function Clients() {
                           label="SMS"
                         />
                       </Box>
-                    </Grid>
-                  </Grid>
-                </Box>
+            </Grid>
+          </Grid>
+        </Box>
               )}
             </Box>
           )}

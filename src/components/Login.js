@@ -88,6 +88,13 @@ function Login() {
       features: ['API', 'Soporte 24/7', 'Personalización'],
       maxEquipment: 10000,
       price: '$120.000/año'
+    },
+    {
+      key: 'EMPRESA-2025',
+      type: 'Empresarial Premium',
+      features: ['Multi-tienda', 'Analytics Avanzado', 'Soporte Prioritario', 'API Completa'],
+      maxEquipment: 50000,
+      price: '$200.000/año'
     }
   ];
 
@@ -213,6 +220,22 @@ function Login() {
                 </Typography>
                 <Typography variant="caption" display="block">
                   Licencia: DEMO-2024
+                </Typography>
+              </Box>
+
+              {/* Credenciales Empresariales */}
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'primary.50', borderRadius: 1, border: '1px solid', borderColor: 'primary.200' }}>
+                <Typography variant="body2" color="primary" gutterBottom>
+                  <strong>🏢 Licencia Empresarial Premium:</strong>
+                </Typography>
+                <Typography variant="caption" display="block" color="primary">
+                  Email: empresa@registromovil.com
+                </Typography>
+                <Typography variant="caption" display="block" color="primary">
+                  Contraseña: empresa2025
+                </Typography>
+                <Typography variant="caption" display="block" color="primary">
+                  Licencia: EMPRESA-2025
                 </Typography>
               </Box>
             </Paper>

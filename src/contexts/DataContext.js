@@ -20,6 +20,7 @@ export const DataProvider = ({ children }) => {
   const [sales, setSales] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [repairs, setRepairs] = useState([]);
+  const [accessories, setAccessories] = useState([]);
   const [notifications, setNotifications] = useState([]);
   
   const [error, setError] = useState(null);
@@ -51,6 +52,7 @@ export const DataProvider = ({ children }) => {
       const savedSales = localStorage.getItem('registroMovil_sales');
       const savedPurchases = localStorage.getItem('registroMovil_purchases');
       const savedRepairs = localStorage.getItem('registroMovil_repairs');
+      const savedAccessories = localStorage.getItem('registroMovil_accessories');
       const savedNotifications = localStorage.getItem('registroMovil_notifications');
 
       if (savedEquipment) setEquipment(JSON.parse(savedEquipment));
@@ -58,6 +60,7 @@ export const DataProvider = ({ children }) => {
       if (savedSales) setSales(JSON.parse(savedSales));
       if (savedPurchases) setPurchases(JSON.parse(savedPurchases));
       if (savedRepairs) setRepairs(JSON.parse(savedRepairs));
+      if (savedAccessories) setAccessories(JSON.parse(savedAccessories));
       if (savedNotifications) setNotifications(JSON.parse(savedNotifications));
     } catch (error) {
       console.error('Error cargando datos:', error);
@@ -368,6 +371,100 @@ export const DataProvider = ({ children }) => {
     return equipment.filter(item => item.status === status);
   };
 
+  // Funciones para accesorios
+  const addAccessory = (newAccessory) => {
+    try {
+      const accessoryWithId = {
+        ...newAccessory,
+        id: Date.now(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        sold: 0
+      };
+
+      const updatedAccessories = [...accessories, accessoryWithId];
+      setAccessories(updatedAccessories);
+      saveDataToStorage('accessories', updatedAccessories);
+
+      // Crear notificación
+      addNotification({
+        type: 'success',
+        title: 'Accesorio Agregado',
+        message: `Se agregó exitosamente ${newAccessory.name}`,
+        timestamp: new Date().toISOString()
+      });
+
+      return { success: true, accessory: accessoryWithId };
+    } catch (error) {
+      console.error('Error agregando accesorio:', error);
+      setError(error.message);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const updateAccessory = (id, updates) => {
+    try {
+      const updatedAccessories = accessories.map(accessory =>
+        accessory.id === id 
+          ? { ...accessory, ...updates, updatedAt: new Date().toISOString() }
+          : accessory
+      );
+
+      setAccessories(updatedAccessories);
+      saveDataToStorage('accessories', updatedAccessories);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error actualizando accesorio:', error);
+      setError(error.message);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const deleteAccessory = (id) => {
+    try {
+      const updatedAccessories = accessories.filter(accessory => accessory.id !== id);
+      setAccessories(updatedAccessories);
+      saveDataToStorage('accessories', updatedAccessories);
+
+      addNotification({
+        type: 'info',
+        title: 'Accesorio Eliminado',
+        message: 'El accesorio fue eliminado exitosamente',
+        timestamp: new Date().toISOString()
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error eliminando accesorio:', error);
+      setError(error.message);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const getAccessoryMetrics = () => {
+    const totalInvestment = accessories.reduce((sum, item) => sum + (item.costPrice * item.stock), 0);
+    const totalInventoryValue = accessories.reduce((sum, item) => sum + (item.salePrice * item.stock), 0);
+    const totalSold = accessories.reduce((sum, item) => sum + item.sold, 0);
+    const totalRevenue = accessories.reduce((sum, item) => sum + (item.salePrice * item.sold), 0);
+    const totalCostOfSold = accessories.reduce((sum, item) => sum + (item.costPrice * item.sold), 0);
+    const totalProfit = totalRevenue - totalCostOfSold;
+    const profitMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100) : 0;
+    const lowStockItems = accessories.filter(item => item.stock <= item.minStock).length;
+
+    return {
+      totalInvestment,
+      totalInventoryValue,
+      totalSold,
+      totalRevenue,
+      totalProfit,
+      profitMargin,
+      lowStockItems,
+      totalItems: accessories.length,
+      totalStock: accessories.reduce((sum, item) => sum + item.stock, 0)
+    };
+  };
+
   // Estadísticas
   const getStats = () => {
     const totalEquipment = equipment.length;
@@ -379,6 +476,9 @@ export const DataProvider = ({ children }) => {
     const delivered = repairs.filter(r => r.status === 'entregado').length;
     const inInventory = equipment.filter(e => e.status === 'en_inventario').length;
 
+    // Métricas de accesorios
+    const accessoryMetrics = getAccessoryMetrics();
+
     return {
       totalEquipment,
       totalSales,
@@ -387,7 +487,8 @@ export const DataProvider = ({ children }) => {
       inRepair,
       pending,
       delivered,
-      inInventory
+      inInventory,
+      accessories: accessoryMetrics
     };
   };
 
@@ -429,6 +530,7 @@ export const DataProvider = ({ children }) => {
     sales,
     purchases,
     repairs,
+    accessories,
     notifications,
     error,
     
@@ -453,6 +555,12 @@ export const DataProvider = ({ children }) => {
     // Funciones de reparaciones
     addRepair,
     updateRepairStatus,
+    
+    // Funciones de accesorios
+    addAccessory,
+    updateAccessory,
+    deleteAccessory,
+    getAccessoryMetrics,
     
     // Funciones de notificaciones
     addNotification,

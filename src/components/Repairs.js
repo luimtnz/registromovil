@@ -60,7 +60,8 @@ import {
   LocalShipping,
   Done,
   Pending,
-  Block
+  Block,
+  Delete
 } from '@mui/icons-material';
 import {
   FormControl,
@@ -79,8 +80,8 @@ function Repairs() {
       clientPhone: '3001234567',
       clientEmail: 'juan@email.com',
       equipment: {
-        brand: 'iPhone',
-        model: '13 Pro',
+      brand: 'iPhone',
+      model: '13 Pro',
         imei: '987654321098765',
         color: 'Sierra Blue',
         capacity: '256GB'
@@ -127,7 +128,7 @@ function Repairs() {
         },
         {
           date: '2024-01-22',
-          status: 'en_reparacion',
+      status: 'en_reparacion',
           notes: 'Repuestos recibidos, iniciando reparación',
           technician: 'Carlos Técnico'
         }
@@ -140,7 +141,7 @@ function Repairs() {
       clientPhone: '3009876543',
       clientEmail: 'maria@email.com',
       equipment: {
-        brand: 'Samsung',
+      brand: 'Samsung',
         model: 'Galaxy S21',
         imei: '123456789012345',
         color: 'Phantom Black',
@@ -310,12 +311,148 @@ function Repairs() {
     setRepairDialogOpen(true);
   };
 
+  // Estados para nueva reparación
+  const [addRepairDialogOpen, setAddRepairDialogOpen] = useState(false);
+  const [newRepair, setNewRepair] = useState({
+    clientName: '',
+    clientPhone: '',
+    clientEmail: '',
+    equipmentBrand: '',
+    equipmentModel: '',
+    equipmentImei: '',
+    equipmentColor: '',
+    equipmentCapacity: '',
+    issue: '',
+    diagnosis: '',
+    priority: 'media',
+    technician: '',
+    estimatedTime: '',
+    cost: '',
+    deposit: '',
+    notes: '',
+    beforePhotos: [],
+    afterPhotos: [],
+    warranty: '3 meses',
+    warrantyNotes: ''
+  });
+
   const handleAddRepair = () => {
+    setAddRepairDialogOpen(true);
+  };
+
+  const handleSaveRepair = () => {
+    if (!newRepair.clientName || !newRepair.equipmentBrand || !newRepair.issue) {
+      setSnackbar({
+        open: true,
+        message: 'Por favor complete los campos obligatorios',
+        severity: 'error'
+      });
+      return;
+    }
+
+    const repair = {
+      id: repairs.length + 1,
+      ticketNumber: `REP-${String(repairs.length + 1).padStart(3, '0')}`,
+      ...newRepair,
+      status: 'recibido',
+      startDate: new Date().toISOString().split('T')[0],
+      estimatedCompletion: newRepair.estimatedTime ? 
+        new Date(Date.now() + parseInt(newRepair.estimatedTime) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null,
+      actualCompletion: null,
+      balance: (parseFloat(newRepair.cost) || 0) - (parseFloat(newRepair.deposit) || 0),
+      beforePhotos: newRepair.beforePhotos,
+      afterPhotos: newRepair.afterPhotos,
+      warranty: newRepair.warranty,
+      warrantyNotes: newRepair.warrantyNotes,
+      createdAt: new Date().toISOString()
+    };
+
+    // Agregar a la lista (en un sistema real, esto se haría con el DataContext)
+    repairs.push(repair);
+    
     setSnackbar({
       open: true,
-      message: 'Funcionalidad de nueva reparación próximamente disponible',
-      severity: 'info'
+      message: 'Reparación registrada exitosamente',
+      severity: 'success'
     });
+
+    // Limpiar formulario
+    setNewRepair({
+      clientName: '',
+      clientPhone: '',
+      clientEmail: '',
+      equipmentBrand: '',
+      equipmentModel: '',
+      equipmentImei: '',
+      equipmentColor: '',
+      equipmentCapacity: '',
+      issue: '',
+      diagnosis: '',
+      priority: 'media',
+      technician: '',
+      estimatedTime: '',
+      cost: '',
+      deposit: '',
+      notes: '',
+      beforePhotos: [],
+      afterPhotos: [],
+      warranty: '3 meses',
+      warrantyNotes: ''
+    });
+
+    setAddRepairDialogOpen(false);
+  };
+
+  const handlePhotoUpload = (type, files) => {
+    const photoArray = Array.from(files).map(file => ({
+      id: Date.now() + Math.random(),
+      url: URL.createObjectURL(file),
+      name: file.name,
+      size: file.size
+    }));
+
+    if (type === 'before') {
+      setNewRepair(prev => ({
+        ...prev,
+        beforePhotos: [...prev.beforePhotos, ...photoArray]
+      }));
+    } else {
+      setNewRepair(prev => ({
+        ...prev,
+        afterPhotos: [...prev.afterPhotos, ...photoArray]
+      }));
+    }
+  };
+
+  const handleRemovePhoto = (type, photoId) => {
+    if (type === 'before') {
+      setNewRepair(prev => ({
+        ...prev,
+        beforePhotos: prev.beforePhotos.filter(p => p.id !== photoId)
+      }));
+    } else {
+      setNewRepair(prev => ({
+        ...prev,
+        afterPhotos: prev.afterPhotos.filter(p => p.id !== photoId)
+      }));
+    }
+  };
+
+  const handleSendWhatsApp = () => {
+    const message = `🔧 *Nueva Reparación Registrada*
+
+📱 *Equipo:* ${newRepair.equipmentBrand} ${newRepair.equipmentModel}
+👤 *Cliente:* ${newRepair.clientName}
+📞 *Teléfono:* ${newRepair.clientPhone}
+❌ *Problema:* ${newRepair.issue}
+💰 *Costo Estimado:* $${newRepair.cost || 'Por definir'}
+⏰ *Tiempo Estimado:* ${newRepair.estimatedTime || 'Por definir'}
+🔒 *Garantía:* ${newRepair.warranty}
+
+_Reparación registrada exitosamente. Te mantendremos informado del progreso._`;
+
+    const whatsappUrl = `https://wa.me/57${newRepair.clientPhone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleWhatsApp = (phone, message) => {
@@ -380,10 +517,10 @@ function Repairs() {
               <CardContent sx={{ textAlign: 'center', p: 2 }}>
                 <Typography variant="h4" color="primary">
                   {stats.total}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Total Reparaciones
-                </Typography>
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Total Reparaciones
+                    </Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -392,10 +529,10 @@ function Repairs() {
               <CardContent sx={{ textAlign: 'center', p: 2 }}>
                 <Typography variant="h4" color="warning.main">
                   {stats.enReparacion}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  En Reparación
-                </Typography>
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      En Reparación
+                    </Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -428,10 +565,10 @@ function Repairs() {
               <CardContent sx={{ textAlign: 'center', p: 2 }}>
                 <Typography variant="h4" color="secondary.main">
                   {formatPrice(stats.ingresos)}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
                   Ingresos
-                </Typography>
+                    </Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -440,10 +577,10 @@ function Repairs() {
               <CardContent sx={{ textAlign: 'center', p: 2 }}>
                 <Typography variant="h4" color="error.main">
                   {repairs.filter(r => r.priority === 'urgente').length}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
                   Urgentes
-                </Typography>
+                    </Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -579,7 +716,7 @@ function Repairs() {
                   <TableCell>
                     <Typography variant="body2">
                       {repair.technician}
-                    </Typography>
+                      </Typography>
                   </TableCell>
                   <TableCell>
                     <Box sx={{ width: '100%' }}>
@@ -590,7 +727,7 @@ function Repairs() {
                       />
                       <Typography variant="caption" color="textSecondary">
                         {Math.round(calculateProgress(repair))}%
-                      </Typography>
+                        </Typography>
                     </Box>
                   </TableCell>
                   <TableCell>
@@ -723,14 +860,14 @@ function Repairs() {
                       <Typography variant="subtitle1" gutterBottom>Problema Reportado:</Typography>
                       <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                         {selectedRepair.issue}
-                      </Typography>
+          </Typography>
                       <Typography variant="subtitle1" gutterBottom>Diagnóstico:</Typography>
-                      <Typography variant="body2" color="textSecondary">
+              <Typography variant="body2" color="textSecondary">
                         {selectedRepair.diagnosis}
-                      </Typography>
+              </Typography>
                     </Card>
                   </Grid>
-                </Grid>
+            </Grid>
               )}
 
               {activeTab === 1 && (
@@ -753,7 +890,7 @@ function Repairs() {
                           </Typography>
                           <Typography variant="body2">
                             {update.notes}
-                          </Typography>
+              </Typography>
                         </StepContent>
                       </Step>
                     ))}
@@ -779,7 +916,7 @@ function Repairs() {
                           </ImageListItem>
                         ))}
                       </ImageList>
-                    </Grid>
+            </Grid>
                     <Grid item xs={12} md={6}>
                       <Typography variant="subtitle1" gutterBottom>Fotos Después:</Typography>
                       {selectedRepair.photos.after.length > 0 ? (
@@ -798,10 +935,10 @@ function Repairs() {
                       ) : (
                         <Typography variant="body2" color="textSecondary" align="center">
                           No hay fotos después aún
-                        </Typography>
+              </Typography>
                       )}
                     </Grid>
-                  </Grid>
+            </Grid>
                 </Box>
               )}
 
@@ -825,7 +962,7 @@ function Repairs() {
                               </Typography>
                               <Typography variant="caption" color="textSecondary">
                                 Proveedor: {part.supplier} • Llegada: {part.arrivalDate}
-                              </Typography>
+              </Typography>
                             </Box>
                           }
                         />
@@ -863,21 +1000,21 @@ function Repairs() {
                           </ListItem>
                         </List>
                       </Card>
-                    </Grid>
+            </Grid>
                     <Grid item xs={12} md={6}>
                       <Card variant="outlined" sx={{ p: 2 }}>
                         <Typography variant="subtitle1" gutterBottom>Garantía:</Typography>
                         <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                           {selectedRepair.warranty}
-                        </Typography>
+              </Typography>
                         <Typography variant="subtitle1" gutterBottom>Tiempo Estimado:</Typography>
-                        <Typography variant="body2" color="textSecondary">
+              <Typography variant="body2" color="textSecondary">
                           {selectedRepair.estimatedTime}
-                        </Typography>
+              </Typography>
                       </Card>
-                    </Grid>
-                  </Grid>
-                </Box>
+            </Grid>
+          </Grid>
+        </Box>
               )}
             </Box>
           )}
@@ -916,6 +1053,327 @@ function Repairs() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Dialog para nueva reparación */}
+      <Dialog 
+        open={addRepairDialogOpen} 
+        onClose={() => setAddRepairDialogOpen(false)} 
+        maxWidth="md" 
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Add color="primary" />
+            Nueva Reparación
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            {/* Información del Cliente */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                👤 Información del Cliente
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Nombre del Cliente *"
+                value={newRepair.clientName}
+                onChange={(e) => setNewRepair({...newRepair, clientName: e.target.value})}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Teléfono"
+                value={newRepair.clientPhone}
+                onChange={(e) => setNewRepair({...newRepair, clientPhone: e.target.value})}
+                placeholder="3001234567"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Email"
+                type="email"
+                value={newRepair.clientEmail}
+                onChange={(e) => setNewRepair({...newRepair, clientEmail: e.target.value})}
+              />
+            </Grid>
+
+            {/* Información del Equipo */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1, mt: 2 }}>
+                📱 Información del Equipo
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Marca *"
+                value={newRepair.equipmentBrand}
+                onChange={(e) => setNewRepair({...newRepair, equipmentBrand: e.target.value})}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Modelo *"
+                value={newRepair.equipmentModel}
+                onChange={(e) => setNewRepair({...newRepair, equipmentModel: e.target.value})}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="IMEI"
+                value={newRepair.equipmentImei}
+                onChange={(e) => setNewRepair({...newRepair, equipmentImei: e.target.value})}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Color"
+                value={newRepair.equipmentColor}
+                onChange={(e) => setNewRepair({...newRepair, equipmentColor: e.target.value})}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Capacidad"
+                value={newRepair.equipmentCapacity}
+                onChange={(e) => setNewRepair({...newRepair, equipmentCapacity: e.target.value})}
+                placeholder="128GB, 256GB, etc."
+              />
+            </Grid>
+
+            {/* Problema y Diagnóstico */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1, mt: 2 }}>
+                🔍 Problema y Diagnóstico
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Problema Reportado *"
+                multiline
+                rows={3}
+                value={newRepair.issue}
+                onChange={(e) => setNewRepair({...newRepair, issue: e.target.value})}
+                required
+                placeholder="Describe el problema que reporta el cliente..."
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Diagnóstico Técnico"
+                multiline
+                rows={3}
+                value={newRepair.diagnosis}
+                onChange={(e) => setNewRepair({...newRepair, diagnosis: e.target.value})}
+                placeholder="Diagnóstico inicial del técnico..."
+              />
+            </Grid>
+
+            {/* Configuración de Reparación */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1, mt: 2 }}>
+                ⚙️ Configuración de Reparación
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Prioridad</InputLabel>
+                <Select
+                  value={newRepair.priority}
+                  label="Prioridad"
+                  onChange={(e) => setNewRepair({...newRepair, priority: e.target.value})}
+                >
+                  <MenuItem value="baja">Baja</MenuItem>
+                  <MenuItem value="media">Media</MenuItem>
+                  <MenuItem value="alta">Alta</MenuItem>
+                  <MenuItem value="urgente">Urgente</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Técnico Asignado"
+                value={newRepair.technician}
+                onChange={(e) => setNewRepair({...newRepair, technician: e.target.value})}
+                placeholder="Nombre del técnico"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Tiempo Estimado (días)"
+                type="number"
+                value={newRepair.estimatedTime}
+                onChange={(e) => setNewRepair({...newRepair, estimatedTime: e.target.value})}
+                placeholder="3"
+              />
+            </Grid>
+
+            {/* Información Financiera */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1, mt: 2 }}>
+                💰 Información Financiera
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Costo Estimado"
+                type="number"
+                value={newRepair.cost}
+                onChange={(e) => setNewRepair({...newRepair, cost: e.target.value})}
+                placeholder="250000"
+                InputProps={{
+                  startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Anticipo/Depósito"
+                type="number"
+                value={newRepair.deposit}
+                onChange={(e) => setNewRepair({...newRepair, deposit: e.target.value})}
+                placeholder="100000"
+                InputProps={{
+                  startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>
+                }}
+              />
+            </Grid>
+
+            {/* Fotos Antes */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1, mt: 2 }}>
+                📸 Fotos Antes de la Reparación
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="before-photos"
+                multiple
+                type="file"
+                onChange={(e) => handlePhotoUpload('before', e.target.files)}
+              />
+              <label htmlFor="before-photos">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<PhotoCamera />}
+                >
+                  Subir Fotos Antes
+                </Button>
+              </label>
+              {newRepair.beforePhotos.length > 0 && (
+                <ImageList cols={3} rowHeight={120} sx={{ mt: 2 }}>
+                  {newRepair.beforePhotos.map((photo) => (
+                    <ImageListItem key={photo.id}>
+                      <img
+                        src={photo.url}
+                        alt={photo.name}
+                        loading="lazy"
+                      />
+                      <ImageListItemBar
+                        actionIcon={
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemovePhoto('before', photo.id)}
+                            sx={{ color: 'white' }}
+                          >
+                            <Delete />
+                          </IconButton>
+                        }
+                      />
+                    </ImageListItem>
+                  ))}
+                </ImageList>
+              )}
+            </Grid>
+
+            {/* Garantía */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1, mt: 2 }}>
+                🔒 Garantía
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Período de Garantía</InputLabel>
+                <Select
+                  value={newRepair.warranty}
+                  label="Período de Garantía"
+                  onChange={(e) => setNewRepair({...newRepair, warranty: e.target.value})}
+                >
+                  <MenuItem value="1 mes">1 mes</MenuItem>
+                  <MenuItem value="3 meses">3 meses</MenuItem>
+                  <MenuItem value="6 meses">6 meses</MenuItem>
+                  <MenuItem value="1 año">1 año</MenuItem>
+                  <MenuItem value="Sin garantía">Sin garantía</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Notas de Garantía"
+                value={newRepair.warrantyNotes}
+                onChange={(e) => setNewRepair({...newRepair, warrantyNotes: e.target.value})}
+                placeholder="Condiciones especiales de garantía..."
+              />
+            </Grid>
+
+            {/* Notas Adicionales */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Notas Adicionales"
+                multiline
+                rows={3}
+                value={newRepair.notes}
+                onChange={(e) => setNewRepair({...newRepair, notes: e.target.value})}
+                placeholder="Información adicional, observaciones, etc..."
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddRepairDialogOpen(false)}>
+            Cancelar
+          </Button>
+          <Button 
+            variant="outlined" 
+            startIcon={<WhatsApp />}
+            onClick={handleSendWhatsApp}
+            disabled={!newRepair.clientPhone}
+          >
+            Enviar WhatsApp
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={handleSaveRepair}
+            startIcon={<Add />}
+          >
+            Registrar Reparación
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* FAB para agregar reparación */}
       <Fab

@@ -16,6 +16,7 @@ import Settings from './components/Settings';
 import Reports from './components/Reports';
 import Notifications from './components/Notifications';
 import MobileFeatures from './components/MobileFeatures';
+import Accessories from './components/Accessories';
 import Sidebar from './components/Sidebar';
 
 
@@ -44,6 +45,7 @@ function AppContent() {
 
               {/* Administración */}
               <Route path="/clients" element={<Clients />} />
+              <Route path="/accessories" element={<Accessories />} />
               <Route path="/settings" element={<Settings />} />
 
               {/* Nuevas Funcionalidades Avanzadas */}

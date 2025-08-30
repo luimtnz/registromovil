@@ -9,7 +9,7 @@ import {
 import {
   Dashboard, Phone, Build, Inventory, ShoppingCart,
   Person, Settings, ExitToApp, Assessment, Notifications,
-  QrCodeScanner, VpnKey, AccountCircle, ExpandMore
+  QrCodeScanner, VpnKey, AccountCircle, ExpandMore, Store
 } from '@mui/icons-material';
 
 function Sidebar() {
@@ -338,6 +338,16 @@ function Sidebar() {
         >
           <ListItemIcon><Person color="action" /></ListItemIcon>
           <ListItemText primary="Clientes" />
+        </ListItem>
+
+        <ListItem 
+          button 
+          component={Link} 
+          to="/accessories"
+          selected={isActiveRoute('/accessories')}
+        >
+          <ListItemIcon><Store color="primary" /></ListItemIcon>
+          <ListItemText primary="Accesorios" />
         </ListItem>
 
         <ListItem 

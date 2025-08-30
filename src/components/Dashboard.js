@@ -25,7 +25,10 @@ import {
   Phone,
   Schedule,
   Build,
-  ShoppingCart
+  ShoppingCart,
+  Store,
+  MonetizationOn,
+  Inventory
 } from '@mui/icons-material';
 
 function Dashboard() {
@@ -308,6 +311,104 @@ function Dashboard() {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Métricas de Accesorios */}
+      {stats.accessories && (
+        <>
+          <Typography variant="h5" gutterBottom sx={{ mt: 3, mb: 2 }}>
+            <Store sx={{ mr: 1, verticalAlign: 'middle' }} />
+            Resumen de Accesorios
+          </Typography>
+          
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ bgcolor: 'primary.50', border: '1px solid', borderColor: 'primary.200' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <MonetizationOn color="primary" sx={{ fontSize: 40, mr: 2 }} />
+                    <Box>
+                      <Typography variant="h6" component="div" color="primary">
+                        ${stats.accessories.totalInvestment?.toLocaleString() || 0}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Inversión Total
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ bgcolor: 'success.50', border: '1px solid', borderColor: 'success.200' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Inventory color="success" sx={{ fontSize: 40, mr: 2 }} />
+                    <Box>
+                      <Typography variant="h6" component="div" color="success.main">
+                        ${stats.accessories.totalInventoryValue?.toLocaleString() || 0}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Valor Inventario
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ bgcolor: 'warning.50', border: '1px solid', borderColor: 'warning.200' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <TrendingUp color="warning" sx={{ fontSize: 40, mr: 2 }} />
+                    <Box>
+                      <Typography variant="h6" component="div" color="warning.main">
+                        ${stats.accessories.totalProfit?.toLocaleString() || 0}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Ganancia ({stats.accessories.profitMargin?.toFixed(1) || 0}%)
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ bgcolor: 'info.50', border: '1px solid', borderColor: 'info.200' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Store color="info" sx={{ fontSize: 40, mr: 2 }} />
+                    <Box>
+                      <Typography variant="h6" component="div" color="info.main">
+                        {stats.accessories.totalStock || 0}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Stock Total ({stats.accessories.totalItems || 0} productos)
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+
+          {/* Alertas de Accesorios */}
+          {stats.accessories.lowStockItems > 0 && (
+            <Alert severity="warning" sx={{ mb: 3 }}>
+              ⚠️ {stats.accessories.lowStockItems} accesorio(s) con stock bajo. 
+              <Button 
+                size="small" 
+                onClick={() => navigate('/accessories')}
+                sx={{ ml: 2 }}
+              >
+                Ver Accesorios
+              </Button>
+            </Alert>
+          )}
+        </>
+      )}
 
       <Grid container spacing={3}>
         {/* Estado de reparaciones */}

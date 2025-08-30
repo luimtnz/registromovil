@@ -56,6 +56,31 @@ export const AuthProvider = ({ children }) => {
           createdAt: new Date().toISOString()
         };
 
+        // Verificar licencia para admin (usar DEMO-2024 por defecto)
+        const licenseData = await verifyLicense('DEMO-2024');
+        
+        if (licenseData.valid) {
+          setUser(userData);
+          setLicense(licenseData);
+          
+          // Guardar en localStorage
+          localStorage.setItem('registroMovil_user', JSON.stringify(userData));
+          localStorage.setItem('registroMovil_license', JSON.stringify(licenseData));
+          
+          return { success: true, message: 'Login exitoso' };
+        } else {
+          return { success: false, message: 'Licencia inválida o expirada' };
+        }
+      } else if (credentials.email === 'empresa@registromovil.com' && credentials.password === 'empresa2025') {
+        const userData = {
+          id: 2,
+          name: 'Gerente Empresarial',
+          email: credentials.email,
+          role: 'enterprise_admin',
+          storeName: 'Registro Móvil Empresarial',
+          createdAt: new Date().toISOString()
+        };
+
         // Verificar licencia
         const licenseData = await verifyLicense(credentials.licenseKey);
         
@@ -122,6 +147,16 @@ export const AuthProvider = ({ children }) => {
         features: ['basic', 'reports', 'notifications', 'advanced', 'export', 'api', 'support'],
         maxUsers: 20,
         maxEquipment: 10000
+      },
+      'EMPRESA-2025': {
+        key: 'EMPRESA-2025',
+        type: 'enterprise',
+        valid: true,
+        expiresAt: '2026-12-31',
+        features: ['basic', 'reports', 'notifications', 'advanced', 'export', 'api', 'support', 'multi-store', 'analytics', 'priority-support'],
+        maxUsers: 50,
+        maxEquipment: 50000,
+        storeName: 'Registro Móvil Empresarial'
       }
     };
 
