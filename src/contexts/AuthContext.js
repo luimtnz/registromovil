@@ -144,7 +144,7 @@ export const AuthProvider = ({ children }) => {
         type: 'enterprise',
         valid: true,
         expiresAt: '2025-12-31',
-        features: ['basic', 'reports', 'notifications', 'advanced', 'export', 'api', 'support'],
+        features: ['basic', 'reports', 'notifications', 'advanced', 'export', 'api', 'support', 'mobile', 'analytics', 'multi-store', 'priority-support', 'backup', 'custom-reports', 'advanced-inventory', 'client-management', 'repair-tracking', 'sales-analytics', 'purchase-management', 'accessory-management', 'qr-generation', 'data-export', 'system-monitoring'],
         maxUsers: 20,
         maxEquipment: 10000
       },
@@ -153,7 +153,7 @@ export const AuthProvider = ({ children }) => {
         type: 'enterprise',
         valid: true,
         expiresAt: '2026-12-31',
-        features: ['basic', 'reports', 'notifications', 'advanced', 'export', 'api', 'support', 'multi-store', 'analytics', 'priority-support'],
+        features: ['basic', 'reports', 'notifications', 'advanced', 'export', 'api', 'support', 'mobile', 'analytics', 'multi-store', 'priority-support', 'backup', 'custom-reports', 'advanced-inventory', 'client-management', 'repair-tracking', 'sales-analytics', 'purchase-management', 'accessory-management', 'qr-generation', 'data-export', 'system-monitoring', 'enterprise-features', 'unlimited-users', 'custom-branding', 'white-label', 'dedicated-support'],
         maxUsers: 50,
         maxEquipment: 50000,
         storeName: 'Registro Móvil Empresarial'

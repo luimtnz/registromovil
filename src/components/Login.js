@@ -14,14 +14,26 @@ import {
   CardContent,
   Chip,
   Divider,
-  CircularProgress
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
 import {
   Login as LoginIcon,
   VpnKey,
   CheckCircle,
   Security,
-  Speed
+  Speed,
+  Person,
+  Phone,
+  Email,
+  Close
 } from '@mui/icons-material';
 
 function Login() {
@@ -36,10 +48,19 @@ function Login() {
   
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
 
   const handleChange = (field, value) => {
     setCredentials(prev => ({ ...prev, [field]: value }));
     setError(''); // Limpiar error al cambiar campos
+  };
+
+  const handleContactSales = () => {
+    setContactDialogOpen(true);
+  };
+
+  const handleCloseContactDialog = () => {
+    setContactDialogOpen(false);
   };
 
   const handleSubmit = async (e) => {
@@ -206,38 +227,6 @@ function Login() {
                   </Button>
                 </Typography>
               </form>
-
-              {/* Credenciales de demo */}
-              <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                <Typography variant="body2" color="textSecondary" gutterBottom>
-                  <strong>Credenciales de Demo:</strong>
-                </Typography>
-                <Typography variant="caption" display="block">
-                  Email: admin@registromovil.com
-                </Typography>
-                <Typography variant="caption" display="block">
-                  Contraseña: admin123
-                </Typography>
-                <Typography variant="caption" display="block">
-                  Licencia: DEMO-2024
-                </Typography>
-              </Box>
-
-              {/* Credenciales Empresariales */}
-              <Box sx={{ mt: 2, p: 2, bgcolor: 'primary.50', borderRadius: 1, border: '1px solid', borderColor: 'primary.200' }}>
-                <Typography variant="body2" color="primary" gutterBottom>
-                  <strong>🏢 Licencia Empresarial Premium:</strong>
-                </Typography>
-                <Typography variant="caption" display="block" color="primary">
-                  Email: empresa@registromovil.com
-                </Typography>
-                <Typography variant="caption" display="block" color="primary">
-                  Contraseña: empresa2025
-                </Typography>
-                <Typography variant="caption" display="block" color="primary">
-                  Licencia: EMPRESA-2025
-                </Typography>
-              </Box>
             </Paper>
           </Grid>
 
@@ -319,7 +308,7 @@ function Login() {
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                   Contáctenos para obtener un plan adaptado a sus necesidades específicas
                 </Typography>
-                <Button variant="outlined" color="primary">
+                <Button variant="outlined" color="primary" onClick={handleContactSales}>
                   Contactar Ventas
                 </Button>
               </Box>
@@ -337,6 +326,119 @@ function Login() {
           </Typography>
         </Box>
       </Box>
+
+      {/* Diálogo de Información de Contacto */}
+      <Dialog 
+        open={contactDialogOpen} 
+        onClose={handleCloseContactDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Person color="primary" sx={{ mr: 1 }} />
+            <Typography variant="h6">Información de Contacto</Typography>
+          </Box>
+          <Button
+            onClick={handleCloseContactDialog}
+            color="inherit"
+            sx={{ minWidth: 'auto', p: 1 }}
+          >
+            <Close />
+          </Button>
+        </DialogTitle>
+        
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="h6" color="primary" gutterBottom>
+              Luis Martínez Acuña
+            </Typography>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
+              Desarrollador y Soporte Técnico
+            </Typography>
+            
+            <List>
+              <ListItem sx={{ px: 0 }}>
+                <ListItemIcon>
+                  <Person color="primary" />
+                </ListItemIcon>
+                <ListItemText 
+                  primary="Nombre Completo"
+                  secondary="Luis Martínez Acuña"
+                />
+              </ListItem>
+              
+              <ListItem sx={{ px: 0 }}>
+                <ListItemIcon>
+                  <Phone color="success" />
+                </ListItemIcon>
+                <ListItemText 
+                  primary="Teléfono / WhatsApp"
+                  secondary="3014566099"
+                  secondaryTypographyProps={{
+                    component: 'a',
+                    href: 'tel:+573014566099',
+                    sx: { color: 'success.main', textDecoration: 'none' }
+                  }}
+                />
+              </ListItem>
+              
+              <ListItem sx={{ px: 0 }}>
+                <ListItemIcon>
+                  <Email color="info" />
+                </ListItemIcon>
+                <ListItemText 
+                  primary="Correo Electrónico"
+                  secondary="luismtnz1988@gmail.com"
+                  secondaryTypographyProps={{
+                    component: 'a',
+                    href: 'mailto:luismtnz1988@gmail.com',
+                    sx: { color: 'info.main', textDecoration: 'none' }
+                  }}
+                />
+              </ListItem>
+            </List>
+            
+            <Box sx={{ mt: 3, p: 2, bgcolor: 'primary.50', borderRadius: 1 }}>
+              <Typography variant="body2" color="primary" fontWeight="bold" gutterBottom>
+                💼 Servicios Disponibles:
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                • Desarrollo de software personalizado<br/>
+                • Soporte técnico especializado<br/>
+                • Consultoría en sistemas de gestión<br/>
+                • Implementación de soluciones empresariales
+              </Typography>
+            </Box>
+          </Box>
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 2 }}>
+          <Button 
+            onClick={handleCloseContactDialog} 
+            color="primary"
+            variant="outlined"
+          >
+            Cerrar
+          </Button>
+          <Button 
+            onClick={() => window.open('mailto:luismtnz1988@gmail.com', '_blank')}
+            color="primary"
+            variant="contained"
+            startIcon={<Email />}
+          >
+            Enviar Email
+          </Button>
+          <Button 
+            onClick={() => window.open('https://wa.me/573014566099', '_blank')}
+            color="success"
+            variant="contained"
+            startIcon={<Phone />}
+          >
+            WhatsApp
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

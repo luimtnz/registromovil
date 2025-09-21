@@ -356,7 +356,8 @@ export const DataProvider = ({ children }) => {
     if (!query) return equipment;
     
     return equipment.filter(item => 
-      item.imei?.toLowerCase().includes(query.toLowerCase()) ||
+      item.imei1?.toLowerCase().includes(query.toLowerCase()) ||
+      item.imei2?.toLowerCase().includes(query.toLowerCase()) ||
       item.brand?.toLowerCase().includes(query.toLowerCase()) ||
       item.model?.toLowerCase().includes(query.toLowerCase()) ||
       item.clientName?.toLowerCase().includes(query.toLowerCase())

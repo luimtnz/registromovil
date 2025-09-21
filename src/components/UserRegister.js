@@ -28,7 +28,8 @@ function UserRegister() {
   const defaultType = location.state?.defaultType || 'venta';
 
   const [equipment, setEquipment] = useState({
-    imei: '',
+    imei1: '', // IMEI 1 (obligatorio)
+    imei2: '', // IMEI 2 (opcional)
     brand: '',
     model: '',
     type: defaultType,
@@ -66,7 +67,7 @@ function UserRegister() {
     try {
       // Validar campos obligatorios según el tipo
       if (equipment.type === 'compra') {
-        if (!equipment.imei || !equipment.brand || !equipment.model ||
+        if (!equipment.imei1 || !equipment.brand || !equipment.model ||
             !equipment.sellerName || !equipment.sellerPhone ||
             !equipment.sellerDocument || !equipment.purchasePrice ||
             !equipment.purchaseDate) {
@@ -74,12 +75,12 @@ function UserRegister() {
           return;
         }
       } else if (equipment.type === 'venta') {
-        if (!equipment.imei || !equipment.brand || !equipment.model) {
+        if (!equipment.imei1 || !equipment.brand || !equipment.model) {
           setError('Por favor, complete todos los campos obligatorios');
           return;
         }
       } else if (equipment.type === 'reparacion') {
-        if (!equipment.imei || !equipment.brand || !equipment.model || !equipment.repairReason) {
+        if (!equipment.imei1 || !equipment.brand || !equipment.model || !equipment.repairReason) {
           setError('Por favor, complete todos los campos obligatorios');
           return;
         }
@@ -111,7 +112,8 @@ function UserRegister() {
 
         // Limpiar formulario
         setEquipment({
-          imei: '',
+          imei1: '',
+          imei2: '',
           brand: '',
           model: '',
           type: defaultType,
@@ -240,15 +242,26 @@ function UserRegister() {
             </Grid>
 
             {/* Campos básicos del equipo */}
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="IMEI"
-                value={equipment.imei}
-                onChange={(e) => handleChange('imei', e.target.value)}
+                label="IMEI 1 *"
+                value={equipment.imei1}
+                onChange={(e) => handleChange('imei1', e.target.value)}
                 required
                 placeholder="123456789012345"
-                helperText="Ingrese el IMEI del equipo móvil"
+                helperText="IMEI principal del equipo móvil (obligatorio)"
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="IMEI 2"
+                value={equipment.imei2}
+                onChange={(e) => handleChange('imei2', e.target.value)}
+                placeholder="987654321098765"
+                helperText="IMEI secundario (opcional - equipos dual SIM)"
               />
             </Grid>
 

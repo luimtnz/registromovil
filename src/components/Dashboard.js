@@ -203,7 +203,7 @@ function Dashboard() {
   return (
     <Container maxWidth="xl">
       <Typography variant="h3" component="h1" gutterBottom sx={{ mt: 3 }}>
-        📊 Dashboard - Registro Móvil
+        📊 Registro Móvil
       </Typography>
 
       {/* Advertencia de límite de licencia */}
@@ -513,8 +513,13 @@ function Dashboard() {
                         secondary={
                           <Box>
                             <Typography variant="caption" display="block">
-                              IMEI: {item.imei}
+                              IMEI 1: {item.imei1}
                             </Typography>
+                            {item.imei2 && (
+                              <Typography variant="caption" display="block" color="textSecondary">
+                                IMEI 2: {item.imei2}
+                              </Typography>
+                            )}
                             <Typography variant="caption" color="textSecondary">
                               {getTypeText(item.type)} • {new Date(item.createdAt).toLocaleDateString()}
                             </Typography>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -48,11 +49,14 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 
 function Inventory() {
+  const navigate = useNavigate();
+  
   // Estado del inventario mejorado
   const equipment = [
     {
       id: 1,
-      imei: '123456789012345',
+      imei1: '123456789012345',
+      imei2: '987654321098765',
       brand: 'Samsung',
       model: 'Galaxy S21',
       type: 'venta',
@@ -76,7 +80,8 @@ function Inventory() {
     },
     {
       id: 2,
-      imei: '987654321098765',
+      imei1: '987654321098765',
+      imei2: '111222333444555',
       brand: 'iPhone',
       model: '13 Pro',
       type: 'reparacion',
@@ -97,7 +102,8 @@ function Inventory() {
     },
     {
       id: 3,
-      imei: '555666777888999',
+      imei1: '555666777888999',
+      imei2: '666777888999000',
       brand: 'Xiaomi',
       model: 'Redmi Note 10',
       type: 'venta',
@@ -121,7 +127,8 @@ function Inventory() {
     },
     {
       id: 4,
-      imei: '111222333444555',
+      imei1: '111222333444555',
+      imei2: '777888999000111',
       brand: 'Huawei',
       model: 'P30 Lite',
       type: 'compra',
@@ -146,7 +153,8 @@ function Inventory() {
     },
     {
       id: 5,
-      imei: '999888777666555',
+      imei1: '999888777666555',
+      imei2: '888777666555444',
       brand: 'Motorola',
       model: 'G Power',
       type: 'compra',
@@ -249,7 +257,8 @@ function Inventory() {
     const matchesStatus = filterStatus === 'todos' || item.status === filterStatus;
     const matchesCategory = filterCategory === 'todos' || item.category === filterCategory;
     const matchesSearch = 
-      item.imei.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.imei1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.imei2?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.clientName && item.clientName.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -273,19 +282,13 @@ function Inventory() {
   };
 
   const handleScanQR = () => {
-    setSnackbar({
-      open: true,
-      message: 'Funcionalidad de escáner QR próximamente disponible',
-      severity: 'info'
-    });
+    // Redirigir a la página de funciones móviles para escaneo QR
+    navigate('/mobile-features');
   };
 
   const handleAddEquipment = () => {
-    setSnackbar({
-      open: true,
-      message: 'Funcionalidad de agregar equipo próximamente disponible',
-      severity: 'info'
-    });
+    // Redirigir a la página de registro de equipos
+    navigate('/user-register');
   };
 
   const handleStockAlert = (equipment) => {
@@ -445,9 +448,16 @@ function Inventory() {
                     </IconButton>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" fontFamily="monospace">
-                      {item.imei}
-                    </Typography>
+                    <Box>
+                      <Typography variant="body2" fontFamily="monospace" fontWeight="bold">
+                        IMEI 1: {item.imei1}
+                      </Typography>
+                      {item.imei2 && (
+                        <Typography variant="body2" fontFamily="monospace" color="textSecondary">
+                          IMEI 2: {item.imei2}
+                        </Typography>
+                      )}
+                    </Box>
                   </TableCell>
                   <TableCell>
                     <Box>
@@ -532,7 +542,7 @@ function Inventory() {
                           color="success"
                           onClick={() => handleWhatsApp(
                             item.clientPhone || item.sellerPhone,
-                            `Hola! Te contacto sobre el ${item.brand} ${item.model} (IMEI: ${item.imei})`
+                            `Hola! Te contacto sobre el ${item.brand} ${item.model} (IMEI 1: ${item.imei1}${item.imei2 ? `, IMEI 2: ${item.imei2}` : ''})`
                           )}
                         >
                           <WhatsApp />
@@ -647,8 +657,13 @@ function Inventory() {
               {selectedEquipment?.qrCode}
             </Typography>
             <Typography variant="body2" color="textSecondary">
-              IMEI: {selectedEquipment?.imei}
+              IMEI 1: {selectedEquipment?.imei1}
             </Typography>
+            {selectedEquipment?.imei2 && (
+              <Typography variant="body2" color="textSecondary">
+                IMEI 2: {selectedEquipment?.imei2}
+              </Typography>
+            )}
             <Typography variant="body2" color="textSecondary">
               {selectedEquipment?.brand} {selectedEquipment?.model}
             </Typography>
