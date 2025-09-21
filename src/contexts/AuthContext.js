@@ -44,8 +44,32 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       
-      // Simular validación de credenciales
-      // En producción, esto sería una llamada a la API
+      // Verificar si es un usuario registrado en localStorage
+      const savedUser = localStorage.getItem('registroMovil_user');
+      const savedLicense = localStorage.getItem('registroMovil_license');
+      
+      if (savedUser && savedLicense) {
+        const userData = JSON.parse(savedUser);
+        const licenseData = JSON.parse(savedLicense);
+        
+        // Validar credenciales del usuario registrado
+        if (userData.email === credentials.email && userData.password === credentials.password) {
+          // Verificar que la licencia no haya expirado
+          const now = new Date();
+          const expiryDate = new Date(licenseData.expiresAt);
+          
+          if (now > expiryDate) {
+            return { success: false, message: 'Su licencia ha expirado. Contacte soporte.' };
+          }
+          
+          setUser(userData);
+          setLicense(licenseData);
+          
+          return { success: true, message: 'Login exitoso' };
+        }
+      }
+      
+      // Credenciales de administrador por defecto
       if (credentials.email === 'admin@registromovil.com' && credentials.password === 'admin123') {
         const userData = {
           id: 1,

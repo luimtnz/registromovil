@@ -66,13 +66,17 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!credentials.email || !credentials.password || !credentials.licenseKey) {
-      setError('Por favor complete todos los campos');
+    if (!credentials.email || !credentials.password) {
+      setError('Por favor complete email y contraseña');
       return;
     }
 
     try {
-      const result = await login(credentials);
+      const result = await login({
+        email: credentials.email,
+        password: credentials.password,
+        licenseKey: credentials.licenseKey || 'AUTO-ASSIGNED'
+      });
       
       if (result.success) {
         setSuccess(result.message);
@@ -189,16 +193,15 @@ function Login() {
 
                 <TextField
                   fullWidth
-                  label="Clave de Licencia"
+                  label="Clave de Licencia (Opcional)"
                   value={credentials.licenseKey}
                   onChange={(e) => handleChange('licenseKey', e.target.value)}
                   margin="normal"
-                  required
-                  placeholder="DEMO-2024"
+                  placeholder="DEMO-2024 (opcional para usuarios registrados)"
                   InputProps={{
                     startAdornment: <VpnKey sx={{ mr: 1, color: 'text.secondary' }} />
                   }}
-                  helperText="Ingrese su clave de licencia válida"
+                  helperText="Solo necesario para usuarios administradores. Los usuarios registrados tienen licencia automática."
                 />
 
                 <Button

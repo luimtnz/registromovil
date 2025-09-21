@@ -36,6 +36,7 @@ function Register() {
     storeName: '',
     ownerName: '',
     email: '',
+    password: '',
     phone: '',
     address: '',
     businessType: '',
@@ -121,7 +122,7 @@ function Register() {
 
   const handleNext = () => {
     if (activeStep === 0) {
-      if (!formData.storeName || !formData.ownerName || !formData.email) {
+      if (!formData.storeName || !formData.ownerName || !formData.email || !formData.password) {
         setError('Por favor complete todos los campos obligatorios');
         return;
       }
@@ -135,13 +136,58 @@ function Register() {
 
   const handleSubmit = async () => {
     try {
+      setError('');
+      
+      // Validar contraseña
+      if (formData.password.length < 6) {
+        setError('La contraseña debe tener al menos 6 caracteres');
+        return;
+      }
+      
       // Simular envío de formulario
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      setSuccess('¡Registro exitoso! Recibirá un email con su clave de licencia en los próximos minutos.');
+      // Crear usuario con la licencia seleccionada
+      const userData = {
+        id: Date.now(),
+        name: formData.ownerName,
+        email: formData.email,
+        password: formData.password,
+        role: 'admin',
+        storeName: formData.storeName,
+        phone: formData.phone,
+        address: formData.address,
+        businessType: formData.businessType,
+        estimatedEquipment: formData.estimatedEquipment,
+        selectedPlan: formData.selectedPlan,
+        createdAt: new Date().toISOString()
+      };
+      
+      // Guardar usuario en localStorage
+      localStorage.setItem('registroMovil_user', JSON.stringify(userData));
+      
+      // Asignar licencia automáticamente según el plan seleccionado
+      const licenseData = {
+        key: formData.selectedPlan,
+        type: formData.selectedPlan.includes('DEMO') ? 'demo' : 
+              formData.selectedPlan.includes('PRO') ? 'professional' : 'enterprise',
+        valid: true,
+        expiresAt: formData.selectedPlan.includes('DEMO') ? 
+          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : // 30 días para demo
+          new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 año para otros
+        features: getSelectedPlan().features || ['basic'],
+        maxUsers: formData.selectedPlan.includes('DEMO') ? 1 : 
+                 formData.selectedPlan.includes('PRO') ? 5 : 20,
+        maxEquipment: getSelectedPlan().maxEquipment || 100,
+        storeName: formData.storeName
+      };
+      
+      localStorage.setItem('registroMovil_license', JSON.stringify(licenseData));
+      
+      setSuccess(`¡Registro exitoso! Su cuenta ha sido creada con el plan ${getSelectedPlan().name}. Redirigiendo al sistema...`);
       
       setTimeout(() => {
-        navigate('/login');
+        navigate('/dashboard');
       }, 3000);
     } catch (error) {
       setError('Error al procesar el registro. Intente nuevamente.');
@@ -241,6 +287,19 @@ function Register() {
                               InputProps={{
                                 startAdornment: <Email sx={{ mr: 1, color: 'text.secondary' }} />
                               }}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              fullWidth
+                              label="Contraseña *"
+                              type="password"
+                              value={formData.password}
+                              onChange={(e) => handleChange('password', e.target.value)}
+                              margin="normal"
+                              required
+                              placeholder="Mínimo 6 caracteres"
+                              helperText="Esta será su contraseña para acceder al sistema"
                             />
                           </Grid>
                           <Grid item xs={12} sm={6}>
