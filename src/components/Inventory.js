@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useData } from '../contexts/DataContext';
+import SyncStatus from './SyncStatus';
 import {
   Container,
   Typography,
@@ -50,9 +52,10 @@ import { QRCodeSVG } from 'qrcode.react';
 
 function Inventory() {
   const navigate = useNavigate();
+  const { equipment } = useData();
   
-  // Estado del inventario mejorado
-  const equipment = [
+  // Estado del inventario mejorado (datos de ejemplo para cuando no hay datos)
+  const sampleEquipment = [
     {
       id: 1,
       imei1: '123456789012345',
@@ -196,8 +199,11 @@ function Inventory() {
 
 
 
+  // Usar datos del DataContext o datos de ejemplo si no hay datos
+  const currentEquipment = equipment.length > 0 ? equipment : sampleEquipment;
+  
   // Verificar alertas de stock
-  const stockAlerts = equipment.filter(item => 
+  const stockAlerts = currentEquipment.filter(item => 
     item.stockLevel <= item.minStockLevel && item.status === 'en_inventario'
   );
 
@@ -252,7 +258,7 @@ function Inventory() {
     return 'success';
   };
 
-  const filteredEquipment = equipment.filter(item => {
+  const filteredEquipment = currentEquipment.filter(item => {
     const matchesType = filterType === 'todos' || item.type === filterType;
     const matchesStatus = filterStatus === 'todos' || item.status === filterStatus;
     const matchesCategory = filterCategory === 'todos' || item.category === filterCategory;
@@ -333,22 +339,25 @@ function Inventory() {
           <Typography variant="h4" component="h1">
             📱 Inventario Inteligente
           </Typography>
-          <Box>
-            <Button
-              variant="outlined"
-              startIcon={<QrCodeScanner />}
-              onClick={handleScanQR}
-              sx={{ mr: 1 }}
-            >
-              Escanear QR
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={handleAddEquipment}
-            >
-              Agregar Equipo
-            </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <SyncStatus />
+            <Box>
+              <Button
+                variant="outlined"
+                startIcon={<QrCodeScanner />}
+                onClick={handleScanQR}
+                sx={{ mr: 1 }}
+              >
+                Escanear QR
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={handleAddEquipment}
+              >
+                Agregar Equipo
+              </Button>
+            </Box>
           </Box>
         </Box>
 
@@ -566,7 +575,7 @@ function Inventory() {
               <Card variant="outlined">
                 <CardContent sx={{ textAlign: 'center', p: 2 }}>
                   <Typography variant="h4" color="primary">
-                    {equipment.length}
+                    {currentEquipment.length}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
                     Total Equipos
@@ -578,7 +587,7 @@ function Inventory() {
               <Card variant="outlined">
                 <CardContent sx={{ textAlign: 'center', p: 2 }}>
                   <Typography variant="h4" color="success.main">
-                    {equipment.filter(item => item.type === 'venta').length}
+                    {currentEquipment.filter(item => item.type === 'venta').length}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
                     Ventas
@@ -590,7 +599,7 @@ function Inventory() {
               <Card variant="outlined">
                 <CardContent sx={{ textAlign: 'center', p: 2 }}>
                   <Typography variant="h4" color="warning.main">
-                    {equipment.filter(item => item.type === 'reparacion').length}
+                    {currentEquipment.filter(item => item.type === 'reparacion').length}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
                     Reparaciones
@@ -602,7 +611,7 @@ function Inventory() {
               <Card variant="outlined">
                 <CardContent sx={{ textAlign: 'center', p: 2 }}>
                   <Typography variant="h4" color="info.main">
-                    {equipment.filter(item => item.status === 'en_inventario').length}
+                    {currentEquipment.filter(item => item.status === 'en_inventario').length}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
                     En Inventario
@@ -626,7 +635,7 @@ function Inventory() {
               <Card variant="outlined">
                 <CardContent sx={{ textAlign: 'center', p: 2 }}>
                   <Typography variant="h4" color="secondary.main">
-                    {equipment.filter(item => item.category === 'smartphone').length}
+                    {currentEquipment.filter(item => item.category === 'smartphone').length}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
                     Smartphones

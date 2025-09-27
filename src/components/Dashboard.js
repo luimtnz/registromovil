@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import SyncStatus from './SyncStatus';
 import {
   Container,
   Grid,
@@ -202,9 +203,12 @@ function Dashboard() {
 
   return (
     <Container maxWidth="xl">
-      <Typography variant="h3" component="h1" gutterBottom sx={{ mt: 3 }}>
-        📊 Registro Móvil
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, mb: 2 }}>
+        <Typography variant="h3" component="h1">
+          📊 Registro Móvil
+        </Typography>
+        <SyncStatus />
+      </Box>
 
       {/* Advertencia de límite de licencia */}
       {license && equipment.length >= license.maxEquipment * 0.9 && (

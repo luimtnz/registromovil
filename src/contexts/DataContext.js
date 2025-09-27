@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
+import apiService from '../services/apiService';
 
 const DataContext = createContext();
 
@@ -12,7 +13,7 @@ export const useData = () => {
 };
 
 export const DataProvider = ({ children }) => {
-  const { license, hasFeature } = useAuth();
+  const { license, hasFeature, user, accessToken, hasActiveLicense, getLicenseLimits } = useAuth();
   
   // Estados para diferentes tipos de datos
   const [equipment, setEquipment] = useState([]);
@@ -24,11 +25,29 @@ export const DataProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   
   const [error, setError] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(null);
+
+  // Monitorear estado de conexión
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Cargar datos desde localStorage al iniciar
   useEffect(() => {
     loadDataFromStorage();
   }, []);
+
 
   // Verificar límites de licencia
   const checkLicenseLimits = useCallback(() => {
@@ -77,11 +96,103 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  // Funciones para equipos
-  const addEquipment = (newEquipment) => {
+  // Función para sincronizar con el backend
+  const syncWithBackend = useCallback(async () => {
+    if (!user || !accessToken || !isOnline) {
+      return;
+    }
+
+    // Verificar si tiene licencia activa para sincronizar
+    if (!hasActiveLicense()) {
+      console.warn('No se puede sincronizar: licencia no activa');
+      return;
+    }
+
     try {
-      if (license && equipment.length >= license.maxEquipment) {
-        throw new Error(`Límite de equipos alcanzado (${license.maxEquipment})`);
+      setIsSyncing(true);
+      const backendData = await apiService.syncAllData(accessToken, user.id);
+      
+      // Actualizar estados con datos del backend
+      setEquipment(backendData.equipment);
+      setClients(backendData.clients);
+      setSales(backendData.sales);
+      setPurchases(backendData.purchases);
+      setRepairs(backendData.repairs);
+      setAccessories(backendData.accessories);
+      setNotifications(backendData.notifications);
+
+      // Guardar en localStorage como backup
+      saveDataToStorage('equipment', backendData.equipment);
+      saveDataToStorage('clients', backendData.clients);
+      saveDataToStorage('sales', backendData.sales);
+      saveDataToStorage('purchases', backendData.purchases);
+      saveDataToStorage('repairs', backendData.repairs);
+      saveDataToStorage('accessories', backendData.accessories);
+      saveDataToStorage('notifications', backendData.notifications);
+
+      setLastSyncTime(new Date().toISOString());
+      console.log('Sincronización exitosa con el backend');
+    } catch (error) {
+      console.error('Error sincronizando con el backend:', error);
+      // No mostrar error al usuario si hay datos locales
+      if (equipment.length === 0 && clients.length === 0) {
+        setError('Error sincronizando datos. Verifique su conexión.');
+      }
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [user, accessToken, isOnline, equipment.length, clients.length, hasActiveLicense]);
+
+  // Sincronizar con el backend cuando el usuario esté autenticado
+  useEffect(() => {
+    if (user && accessToken) {
+      syncWithBackend();
+    }
+  }, [user, accessToken, syncWithBackend]);
+
+  // Función para sincronizar operación individual
+  const syncOperation = async (operation) => {
+    if (!user || !accessToken) {
+      return;
+    }
+
+    if (isOnline) {
+      try {
+        await apiService.executeSyncOperation({
+          ...operation,
+          token: accessToken,
+          userId: user.id
+        });
+      } catch (error) {
+        console.error('Error sincronizando operación:', error);
+        // Agregar a la cola para reintento
+        apiService.addToSyncQueue({
+          ...operation,
+          token: accessToken,
+          userId: user.id
+        });
+      }
+    } else {
+      // Si está offline, agregar a la cola
+      apiService.addToSyncQueue({
+        ...operation,
+        token: accessToken,
+        userId: user.id
+      });
+    }
+  };
+
+  // Funciones para equipos
+  const addEquipment = async (newEquipment) => {
+    try {
+      // Verificar si tiene licencia activa
+      if (!hasActiveLicense()) {
+        throw new Error('Requiere una licencia activa para agregar equipos');
+      }
+
+      const limits = getLicenseLimits();
+      if (equipment.length >= limits.maxEquipment) {
+        throw new Error(`Límite de equipos alcanzado (${limits.maxEquipment})`);
       }
 
       const equipmentWithId = {
@@ -94,6 +205,12 @@ export const DataProvider = ({ children }) => {
       const updatedEquipment = [...equipment, equipmentWithId];
       setEquipment(updatedEquipment);
       saveDataToStorage('equipment', updatedEquipment);
+
+      // Sincronizar con el backend
+      await syncOperation({
+        type: 'SAVE_EQUIPMENT',
+        data: equipmentWithId
+      });
 
       // Crear notificación
       addNotification({
@@ -110,8 +227,13 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  const updateEquipment = (id, updates) => {
+  const updateEquipment = async (id, updates) => {
     try {
+      // Verificar si tiene licencia activa
+      if (!hasActiveLicense()) {
+        throw new Error('Requiere una licencia activa para actualizar equipos');
+      }
+
       const updatedEquipment = equipment.map(item => 
         item.id === id 
           ? { ...item, ...updates, updatedAt: new Date().toISOString() }
@@ -120,6 +242,13 @@ export const DataProvider = ({ children }) => {
       
       setEquipment(updatedEquipment);
       saveDataToStorage('equipment', updatedEquipment);
+
+      // Sincronizar con el backend
+      const equipmentToUpdate = updatedEquipment.find(item => item.id === id);
+      await syncOperation({
+        type: 'UPDATE_EQUIPMENT',
+        data: equipmentToUpdate
+      });
 
       addNotification({
         type: 'info',
@@ -135,13 +264,24 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  const deleteEquipment = (id) => {
+  const deleteEquipment = async (id) => {
     try {
+      // Verificar si tiene licencia activa
+      if (!hasActiveLicense()) {
+        throw new Error('Requiere una licencia activa para eliminar equipos');
+      }
+
       const equipmentToDelete = equipment.find(item => item.id === id);
       const updatedEquipment = equipment.filter(item => item.id !== id);
       
       setEquipment(updatedEquipment);
       saveDataToStorage('equipment', updatedEquipment);
+
+      // Sincronizar con el backend
+      await syncOperation({
+        type: 'DELETE_EQUIPMENT',
+        data: { id }
+      });
 
       addNotification({
         type: 'warning',
@@ -158,7 +298,7 @@ export const DataProvider = ({ children }) => {
   };
 
   // Funciones para clientes
-  const addClient = (newClient) => {
+  const addClient = async (newClient) => {
     try {
       const clientWithId = {
         ...newClient,
@@ -170,6 +310,12 @@ export const DataProvider = ({ children }) => {
       setClients(updatedClients);
       saveDataToStorage('clients', updatedClients);
 
+      // Sincronizar con el backend
+      await syncOperation({
+        type: 'SAVE_CLIENT',
+        data: clientWithId
+      });
+
       return { success: true, client: clientWithId };
     } catch (error) {
       setError(error.message);
@@ -177,7 +323,7 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  const updateClient = (id, updates) => {
+  const updateClient = async (id, updates) => {
     try {
       const updatedClients = clients.map(client => 
         client.id === id 
@@ -188,6 +334,13 @@ export const DataProvider = ({ children }) => {
       setClients(updatedClients);
       saveDataToStorage('clients', updatedClients);
 
+      // Sincronizar con el backend
+      const clientToUpdate = updatedClients.find(client => client.id === id);
+      await syncOperation({
+        type: 'UPDATE_CLIENT',
+        data: clientToUpdate
+      });
+
       return { success: true };
     } catch (error) {
       setError(error.message);
@@ -196,8 +349,13 @@ export const DataProvider = ({ children }) => {
   };
 
   // Funciones para ventas
-  const addSale = (saleData) => {
+  const addSale = async (saleData) => {
     try {
+      // Verificar si tiene licencia activa
+      if (!hasActiveLicense()) {
+        throw new Error('Requiere una licencia activa para registrar ventas');
+      }
+
       const saleWithId = {
         ...saleData,
         id: Date.now(),
@@ -209,9 +367,15 @@ export const DataProvider = ({ children }) => {
       setSales(updatedSales);
       saveDataToStorage('sales', updatedSales);
 
+      // Sincronizar con el backend
+      await syncOperation({
+        type: 'SAVE_SALE',
+        data: saleWithId
+      });
+
       // Actualizar estado del equipo
       if (saleData.equipmentId) {
-        updateEquipment(saleData.equipmentId, { status: 'vendido' });
+        await updateEquipment(saleData.equipmentId, { status: 'vendido' });
       }
 
       addNotification({
@@ -229,8 +393,13 @@ export const DataProvider = ({ children }) => {
   };
 
   // Funciones para compras
-  const addPurchase = (purchaseData) => {
+  const addPurchase = async (purchaseData) => {
     try {
+      // Verificar si tiene licencia activa
+      if (!hasActiveLicense()) {
+        throw new Error('Requiere una licencia activa para registrar compras');
+      }
+
       const purchaseWithId = {
         ...purchaseData,
         id: Date.now(),
@@ -241,6 +410,12 @@ export const DataProvider = ({ children }) => {
       const updatedPurchases = [...purchases, purchaseWithId];
       setPurchases(updatedPurchases);
       saveDataToStorage('purchases', updatedPurchases);
+
+      // Sincronizar con el backend
+      await syncOperation({
+        type: 'SAVE_PURCHASE',
+        data: purchaseWithId
+      });
 
       addNotification({
         type: 'success',
@@ -257,8 +432,13 @@ export const DataProvider = ({ children }) => {
   };
 
   // Funciones para reparaciones
-  const addRepair = (repairData) => {
+  const addRepair = async (repairData) => {
     try {
+      // Verificar si tiene licencia activa
+      if (!hasActiveLicense()) {
+        throw new Error('Requiere una licencia activa para registrar reparaciones');
+      }
+
       const repairWithId = {
         ...repairData,
         id: Date.now(),
@@ -269,6 +449,12 @@ export const DataProvider = ({ children }) => {
       const updatedRepairs = [...repairs, repairWithId];
       setRepairs(updatedRepairs);
       saveDataToStorage('repairs', updatedRepairs);
+
+      // Sincronizar con el backend
+      await syncOperation({
+        type: 'SAVE_REPAIR',
+        data: repairWithId
+      });
 
       addNotification({
         type: 'info',
@@ -284,7 +470,7 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  const updateRepairStatus = (id, status) => {
+  const updateRepairStatus = async (id, status) => {
     try {
       const updatedRepairs = repairs.map(repair => 
         repair.id === id 
@@ -294,6 +480,13 @@ export const DataProvider = ({ children }) => {
       
       setRepairs(updatedRepairs);
       saveDataToStorage('repairs', updatedRepairs);
+
+      // Sincronizar con el backend
+      const repairToUpdate = updatedRepairs.find(repair => repair.id === id);
+      await syncOperation({
+        type: 'UPDATE_REPAIR',
+        data: repairToUpdate
+      });
 
       const repair = repairs.find(r => r.id === id);
       addNotification({
@@ -311,7 +504,7 @@ export const DataProvider = ({ children }) => {
   };
 
   // Funciones para notificaciones
-  const addNotification = (notification) => {
+  const addNotification = async (notification) => {
     try {
       const notificationWithId = {
         ...notification,
@@ -322,12 +515,18 @@ export const DataProvider = ({ children }) => {
       const updatedNotifications = [notificationWithId, ...notifications];
       setNotifications(updatedNotifications);
       saveDataToStorage('notifications', updatedNotifications);
+
+      // Sincronizar con el backend
+      await syncOperation({
+        type: 'SAVE_NOTIFICATION',
+        data: notificationWithId
+      });
     } catch (error) {
       console.error('Error agregando notificación:', error);
     }
   };
 
-  const markNotificationAsRead = (id) => {
+  const markNotificationAsRead = async (id) => {
     try {
       const updatedNotifications = notifications.map(notification => 
         notification.id === id 
@@ -337,6 +536,13 @@ export const DataProvider = ({ children }) => {
       
       setNotifications(updatedNotifications);
       saveDataToStorage('notifications', updatedNotifications);
+
+      // Sincronizar con el backend
+      const notificationToUpdate = updatedNotifications.find(n => n.id === id);
+      await syncOperation({
+        type: 'UPDATE_NOTIFICATION',
+        data: notificationToUpdate
+      });
     } catch (error) {
       console.error('Error marcando notificación:', error);
     }
@@ -373,7 +579,7 @@ export const DataProvider = ({ children }) => {
   };
 
   // Funciones para accesorios
-  const addAccessory = (newAccessory) => {
+  const addAccessory = async (newAccessory) => {
     try {
       const accessoryWithId = {
         ...newAccessory,
@@ -387,8 +593,14 @@ export const DataProvider = ({ children }) => {
       setAccessories(updatedAccessories);
       saveDataToStorage('accessories', updatedAccessories);
 
+      // Sincronizar con el backend
+      await syncOperation({
+        type: 'SAVE_ACCESSORY',
+        data: accessoryWithId
+      });
+
       // Crear notificación
-      addNotification({
+      await addNotification({
         type: 'success',
         title: 'Accesorio Agregado',
         message: `Se agregó exitosamente ${newAccessory.name}`,
@@ -403,7 +615,7 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  const updateAccessory = (id, updates) => {
+  const updateAccessory = async (id, updates) => {
     try {
       const updatedAccessories = accessories.map(accessory =>
         accessory.id === id 
@@ -414,6 +626,13 @@ export const DataProvider = ({ children }) => {
       setAccessories(updatedAccessories);
       saveDataToStorage('accessories', updatedAccessories);
 
+      // Sincronizar con el backend
+      const accessoryToUpdate = updatedAccessories.find(accessory => accessory.id === id);
+      await syncOperation({
+        type: 'UPDATE_ACCESSORY',
+        data: accessoryToUpdate
+      });
+
       return { success: true };
     } catch (error) {
       console.error('Error actualizando accesorio:', error);
@@ -422,13 +641,19 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  const deleteAccessory = (id) => {
+  const deleteAccessory = async (id) => {
     try {
       const updatedAccessories = accessories.filter(accessory => accessory.id !== id);
       setAccessories(updatedAccessories);
       saveDataToStorage('accessories', updatedAccessories);
 
-      addNotification({
+      // Sincronizar con el backend
+      await syncOperation({
+        type: 'DELETE_ACCESSORY',
+        data: { id }
+      });
+
+      await addNotification({
         type: 'info',
         title: 'Accesorio Eliminado',
         message: 'El accesorio fue eliminado exitosamente',
@@ -534,6 +759,9 @@ export const DataProvider = ({ children }) => {
     accessories,
     notifications,
     error,
+    isOnline,
+    isSyncing,
+    lastSyncTime,
     
     // Funciones de equipos
     addEquipment,
@@ -571,7 +799,8 @@ export const DataProvider = ({ children }) => {
     // Utilidades
     getStats,
     exportData,
-    clearError
+    clearError,
+    syncWithBackend
   };
 
   return (

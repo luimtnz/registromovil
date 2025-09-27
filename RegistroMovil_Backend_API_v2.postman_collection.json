@@ -1,0 +1,406 @@
+{
+	"info": {
+		"_postman_id": "registromovil-backend-api-v2",
+		"name": "RegistroMóvil Backend API v2",
+		"description": "Colección actualizada con el nuevo flujo de registro completo según FLUJO_REGISTRO_BACKEND.md",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "registromovil-backend-v2"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "API Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						},
+						"description": "Verificar estado general de la API"
+					},
+					"response": []
+				},
+				{
+					"name": "Auth Module Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/health",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "health"]
+						},
+						"description": "Verificar estado del módulo de autenticación"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para verificar el estado de la aplicación"
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User (Complete Flow)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"tienda@example.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"Juan\",\n  \"last_name\": \"Pérez\",\n  \"role\": \"admin\",\n  \"store_name\": \"Mi Tienda Móvil\",\n  \"phone\": \"3001234567\",\n  \"address\": \"Calle 123 #45-67, Bogotá\",\n  \"business_type\": \"Venta\",\n  \"estimated_equipment\": 100,\n  \"selected_plan\": \"DEMO-2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Registro completo de usuario con información de tienda según el flujo definido en FLUJO_REGISTRO_BACKEND.md"
+					},
+					"response": []
+				},
+				{
+					"name": "Register User (Minimal)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"minimal@example.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"Ana\",\n  \"last_name\": \"García\",\n  \"store_name\": \"Tienda Mínima\",\n  \"selected_plan\": \"BASIC-2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Registro mínimo de usuario con solo campos obligatorios"
+					},
+					"response": []
+				},
+				{
+					"name": "Register User (Service Business)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"servicio@example.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"Carlos\",\n  \"last_name\": \"López\",\n  \"role\": \"admin\",\n  \"store_name\": \"Servicios Técnicos López\",\n  \"phone\": \"3009876543\",\n  \"address\": \"Avenida 68 #25-30, Medellín\",\n  \"business_type\": \"Servicio\",\n  \"estimated_equipment\": 50,\n  \"selected_plan\": \"PRO-2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Registro de usuario con negocio de servicios"
+					},
+					"response": []
+				},
+				{
+					"name": "Register User (Mixed Business)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"mixto@example.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"María\",\n  \"last_name\": \"Rodríguez\",\n  \"role\": \"admin\",\n  \"store_name\": \"Electrodomésticos y Servicios María\",\n  \"phone\": \"3005555555\",\n  \"address\": \"Carrera 15 #93-47, Bogotá\",\n  \"business_type\": \"Mixto\",\n  \"estimated_equipment\": 200,\n  \"selected_plan\": \"ENTERPRISE-2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Registro de usuario con negocio mixto (venta y servicio)"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"tienda@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Iniciar sesión con credenciales de usuario"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/refresh",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "refresh"]
+						},
+						"description": "Renovar token de acceso usando refresh token"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de autenticación con el nuevo flujo de registro completo"
+		},
+		{
+			"name": "License Management",
+			"item": [
+				{
+					"name": "Verify License",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"license_key\": \"DEMO-2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/verify-license",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "verify-license"]
+						},
+						"description": "Verificar validez de una licencia"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify License (Standard Format)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"license_key\": \"ABCD-1234-EFGH-5678\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/verify-license",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "verify-license"]
+						},
+						"description": "Verificar licencia con formato estándar XXXX-XXXX-XXXX-XXXX"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestión de licencias"
+		},
+		{
+			"name": "Validation Tests",
+			"item": [
+				{
+					"name": "Register - Invalid Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"email-invalido\",\n  \"password\": \"password123\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"store_name\": \"Test Store\",\n  \"selected_plan\": \"DEMO-2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Probar validación de email inválido"
+					},
+					"response": []
+				},
+				{
+					"name": "Register - Short Store Name",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"store_name\": \"A\",\n  \"selected_plan\": \"DEMO-2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Probar validación de nombre de tienda muy corto"
+					},
+					"response": []
+				},
+				{
+					"name": "Register - Invalid Phone",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"store_name\": \"Test Store\",\n  \"phone\": \"123\",\n  \"selected_plan\": \"DEMO-2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Probar validación de teléfono inválido"
+					},
+					"response": []
+				},
+				{
+					"name": "Register - Invalid Business Type",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"store_name\": \"Test Store\",\n  \"business_type\": \"InvalidType\",\n  \"selected_plan\": \"DEMO-2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Probar validación de tipo de negocio inválido"
+					},
+					"response": []
+				},
+				{
+					"name": "Register - Duplicate Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"tienda@example.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"store_name\": \"Test Store\",\n  \"selected_plan\": \"DEMO-2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Probar registro con email duplicado"
+					},
+					"response": []
+				}
+			],
+			"description": "Tests de validación para el endpoint de registro"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script de pre-request global",
+					"console.log('Ejecutando request a:', pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Tests globales",
+					"pm.test('Response time is less than 5000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"pm.test('Response has valid JSON', function () {",
+					"    pm.response.to.be.json;",
+					"});",
+					"",
+					"// Guardar tokens automáticamente",
+					"if (pm.response.json() && pm.response.json().access_token) {",
+					"    pm.environment.set('access_token', pm.response.json().access_token);",
+					"}",
+					"",
+					"if (pm.response.json() && pm.response.json().refresh_token) {",
+					"    pm.environment.set('refresh_token', pm.response.json().refresh_token);",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8001",
+			"type": "string"
+		}
+	]
+}

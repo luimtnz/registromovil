@@ -18,6 +18,8 @@ import Notifications from './components/Notifications';
 import MobileFeatures from './components/MobileFeatures';
 import Accessories from './components/Accessories';
 import Sidebar from './components/Sidebar';
+import SyncNotification from './components/SyncNotification';
+import ProtectedRoute from './components/ProtectedRoute';
 
 
 
@@ -31,27 +33,82 @@ function AppContent() {
         <div style={{ display: 'flex' }}>
           <Sidebar />
           <div style={{ flexGrow: 1 }}>
+            <SyncNotification />
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/user-register" element={<UserRegister />} />
-              <Route path="/inventory" element={<Inventory />} />
-              <Route path="/receipt" element={<Receipt />} />
+              
+              {/* Rutas que requieren licencia activa */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/user-register" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <UserRegister />
+                </ProtectedRoute>
+              } />
+              <Route path="/inventory" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <Inventory />
+                </ProtectedRoute>
+              } />
+              <Route path="/receipt" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <Receipt />
+                </ProtectedRoute>
+              } />
 
               {/* Operaciones */}
-              <Route path="/sales" element={<Sales />} />
-              <Route path="/purchases" element={<Purchases />} />
-              <Route path="/repairs" element={<Repairs />} />
+              <Route path="/sales" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <Sales />
+                </ProtectedRoute>
+              } />
+              <Route path="/purchases" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <Purchases />
+                </ProtectedRoute>
+              } />
+              <Route path="/repairs" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <Repairs />
+                </ProtectedRoute>
+              } />
 
               {/* Administración */}
-              <Route path="/clients" element={<Clients />} />
-              <Route path="/accessories" element={<Accessories />} />
-              <Route path="/settings" element={<Settings />} />
+              <Route path="/clients" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <Clients />
+                </ProtectedRoute>
+              } />
+              <Route path="/accessories" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <Accessories />
+                </ProtectedRoute>
+              } />
+              <Route path="/settings" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <Settings />
+                </ProtectedRoute>
+              } />
 
               {/* Nuevas Funcionalidades Avanzadas */}
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/mobile-features" element={<MobileFeatures />} />
+              <Route path="/reports" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <Reports />
+                </ProtectedRoute>
+              } />
+              <Route path="/notifications" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <Notifications />
+                </ProtectedRoute>
+              } />
+              <Route path="/mobile-features" element={
+                <ProtectedRoute requireActiveLicense={true}>
+                  <MobileFeatures />
+                </ProtectedRoute>
+              } />
 
               {/* Redirigir rutas no encontradas al dashboard */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />

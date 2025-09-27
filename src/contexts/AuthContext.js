@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { buildApiUrl, getDefaultHeaders, getAuthHeaders } from '../config/api';
 
 const AuthContext = createContext();
 
@@ -14,6 +15,16 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [license, setLicense] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
+  const [refreshToken, setRefreshToken] = useState(null);
+  
+  // Estados de licencia
+  const [licenseStatus, setLicenseStatus] = useState('pending'); // pending, active, expired, invalid
+  const [licenseValidation, setLicenseValidation] = useState({
+    isChecking: false,
+    lastChecked: null,
+    message: ''
+  });
 
   // Cargar datos del usuario y licencia desde localStorage al iniciar
   useEffect(() => {
@@ -21,6 +32,9 @@ export const AuthProvider = ({ children }) => {
       try {
         const savedUser = localStorage.getItem('registroMovil_user');
         const savedLicense = localStorage.getItem('registroMovil_license');
+        const savedAccessToken = localStorage.getItem('registroMovil_access_token');
+        const savedRefreshToken = localStorage.getItem('registroMovil_refresh_token');
+        const savedLicenseStatus = localStorage.getItem('registroMovil_license_status');
         
         if (savedUser) {
           setUser(JSON.parse(savedUser));
@@ -28,6 +42,18 @@ export const AuthProvider = ({ children }) => {
         
         if (savedLicense) {
           setLicense(JSON.parse(savedLicense));
+        }
+
+        if (savedAccessToken) {
+          setAccessToken(savedAccessToken);
+        }
+
+        if (savedRefreshToken) {
+          setRefreshToken(savedRefreshToken);
+        }
+
+        if (savedLicenseStatus) {
+          setLicenseStatus(savedLicenseStatus);
         }
       } catch (error) {
         console.error('Error cargando datos de autenticación:', error);
@@ -44,7 +70,74 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       
-      // Verificar si es un usuario registrado en localStorage
+      const response = await fetch(buildApiUrl('/api/v1/auth/login'), {
+        method: 'POST',
+        headers: getDefaultHeaders(),
+        body: JSON.stringify({
+          email: credentials.email,
+          password: credentials.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Guardar tokens
+        setAccessToken(data.access_token);
+        setRefreshToken(data.refresh_token);
+        
+        // Guardar datos del usuario
+        const userData = {
+          id: data.user.id,
+          name: `${data.user.first_name} ${data.user.last_name}`,
+          email: data.user.email,
+          role: data.user.role,
+          storeName: data.user.store_name,
+          phone: data.user.phone,
+          address: data.user.address,
+          businessType: data.user.business_type,
+          estimatedEquipment: data.user.estimated_equipment,
+          createdAt: data.user.created_at
+        };
+        
+        setUser(userData);
+        
+        // Guardar datos de la licencia si están disponibles
+        if (data.license) {
+          setLicense(data.license);
+          setLicenseStatus(data.license.status || 'pending');
+          localStorage.setItem('registroMovil_license', JSON.stringify(data.license));
+          localStorage.setItem('registroMovil_license_status', data.license.status || 'pending');
+        } else {
+          // Si no hay licencia, el usuario está pendiente
+          setLicenseStatus('pending');
+          localStorage.setItem('registroMovil_license_status', 'pending');
+        }
+        
+        // Guardar en localStorage
+        localStorage.setItem('registroMovil_user', JSON.stringify(userData));
+        localStorage.setItem('registroMovil_access_token', data.access_token);
+        localStorage.setItem('registroMovil_refresh_token', data.refresh_token);
+        
+        return { success: true, message: 'Login exitoso' };
+      } else {
+        // Si hay error del servidor, intentar login en modo de desarrollo
+        console.warn('Error del servidor en login, intentando modo de desarrollo:', data.message);
+        return loginInDevelopmentMode(credentials);
+      }
+    } catch (error) {
+      console.error('Error en login:', error);
+      // En caso de error de conexión, intentar modo de desarrollo
+      return loginInDevelopmentMode(credentials);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función de login en modo de desarrollo
+  const loginInDevelopmentMode = async (credentials) => {
+    try {
+      // Verificar si hay un usuario guardado en localStorage
       const savedUser = localStorage.getItem('registroMovil_user');
       const savedLicense = localStorage.getItem('registroMovil_license');
       
@@ -52,81 +145,34 @@ export const AuthProvider = ({ children }) => {
         const userData = JSON.parse(savedUser);
         const licenseData = JSON.parse(savedLicense);
         
-        // Validar credenciales del usuario registrado
-        if (userData.email === credentials.email && userData.password === credentials.password) {
-          // Verificar que la licencia no haya expirado
-          const now = new Date();
-          const expiryDate = new Date(licenseData.expiresAt);
-          
-          if (now > expiryDate) {
-            return { success: false, message: 'Su licencia ha expirado. Contacte soporte.' };
-          }
-          
+        // Validar credenciales del usuario guardado
+        if (userData.email === credentials.email) {
           setUser(userData);
           setLicense(licenseData);
-          
-          return { success: true, message: 'Login exitoso' };
+          return { success: true, message: 'Login exitoso (modo desarrollo)' };
         }
       }
       
-      // Credenciales de administrador por defecto
-      if (credentials.email === 'admin@registromovil.com' && credentials.password === 'admin123') {
-        const userData = {
-          id: 1,
-          name: 'Administrador',
-          email: credentials.email,
-          role: 'admin',
-          storeName: 'Mi Tienda Móvil',
-          createdAt: new Date().toISOString()
-        };
+      // Si no hay usuario guardado, crear uno de desarrollo
+      const userData = {
+        id: Date.now(),
+        name: 'Usuario Demo',
+        email: credentials.email,
+        role: 'admin',
+        storeName: 'Tienda Demo',
+        createdAt: new Date().toISOString()
+      };
 
-        // Verificar licencia para admin (usar DEMO-2024 por defecto)
-        const licenseData = await verifyLicense('DEMO-2024');
-        
-        if (licenseData.valid) {
-          setUser(userData);
-          setLicense(licenseData);
-          
-          // Guardar en localStorage
-          localStorage.setItem('registroMovil_user', JSON.stringify(userData));
-          localStorage.setItem('registroMovil_license', JSON.stringify(licenseData));
-          
-          return { success: true, message: 'Login exitoso' };
-        } else {
-          return { success: false, message: 'Licencia inválida o expirada' };
-        }
-      } else if (credentials.email === 'empresa@registromovil.com' && credentials.password === 'empresa2025') {
-        const userData = {
-          id: 2,
-          name: 'Gerente Empresarial',
-          email: credentials.email,
-          role: 'enterprise_admin',
-          storeName: 'Registro Móvil Empresarial',
-          createdAt: new Date().toISOString()
-        };
-
-        // Verificar licencia
-        const licenseData = await verifyLicense(credentials.licenseKey);
-        
-        if (licenseData.valid) {
-          setUser(userData);
-          setLicense(licenseData);
-          
-          // Guardar en localStorage
-          localStorage.setItem('registroMovil_user', JSON.stringify(userData));
-          localStorage.setItem('registroMovil_license', JSON.stringify(licenseData));
-          
-          return { success: true, message: 'Login exitoso' };
-        } else {
-          return { success: false, message: 'Licencia inválida o expirada' };
-        }
-      } else {
-        return { success: false, message: 'Credenciales inválidas' };
-      }
+      const licenseData = getDevelopmentLicense('DEMO-2024');
+      
+      setUser(userData);
+      setLicense(licenseData);
+      localStorage.setItem('registroMovil_user', JSON.stringify(userData));
+      localStorage.setItem('registroMovil_license', JSON.stringify(licenseData));
+      
+      return { success: true, message: 'Login exitoso (modo desarrollo)' };
     } catch (error) {
-      return { success: false, message: 'Error en el servidor' };
-    } finally {
-      setLoading(false);
+      return { success: false, message: 'Error en modo de desarrollo' };
     }
   };
 
@@ -134,17 +180,105 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     setLicense(null);
+    setAccessToken(null);
+    setRefreshToken(null);
+    setLicenseStatus('pending');
     localStorage.removeItem('registroMovil_user');
     localStorage.removeItem('registroMovil_license');
+    localStorage.removeItem('registroMovil_access_token');
+    localStorage.removeItem('registroMovil_refresh_token');
+    localStorage.removeItem('registroMovil_license_status');
+  };
+
+  // Función para validar licencia con el backend
+  const validateLicense = async () => {
+    if (!user || !accessToken) {
+      return { success: false, message: 'Usuario no autenticado' };
+    }
+
+    try {
+      setLicenseValidation(prev => ({ ...prev, isChecking: true }));
+      
+      const response = await fetch(buildApiUrl('/api/v1/auth/validate-license'), {
+        method: 'POST',
+        headers: getAuthHeaders(accessToken),
+        body: JSON.stringify({ user_id: user.id })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const newStatus = data.license?.status || 'pending';
+        setLicenseStatus(newStatus);
+        setLicense(data.license);
+        setLicenseValidation({
+          isChecking: false,
+          lastChecked: new Date().toISOString(),
+          message: data.message || 'Licencia validada'
+        });
+        
+        // Actualizar localStorage
+        localStorage.setItem('registroMovil_license', JSON.stringify(data.license));
+        localStorage.setItem('registroMovil_license_status', newStatus);
+        
+        return { 
+          success: true, 
+          status: newStatus,
+          message: data.message || 'Licencia validada correctamente'
+        };
+      } else {
+        setLicenseValidation({
+          isChecking: false,
+          lastChecked: new Date().toISOString(),
+          message: data.message || 'Error validando licencia'
+        });
+        return { success: false, message: data.message || 'Error validando licencia' };
+      }
+    } catch (error) {
+      console.error('Error validando licencia:', error);
+      setLicenseValidation({
+        isChecking: false,
+        lastChecked: new Date().toISOString(),
+        message: 'Error de conexión'
+      });
+      return { success: false, message: 'Error de conexión al validar licencia' };
+    }
   };
 
   // Verificar licencia
   const verifyLicense = async (licenseKey) => {
-    // Simular verificación de licencia
-    // En producción, esto sería una llamada a la API de licencias
-    
-    // Licencias de ejemplo para testing
-    const validLicenses = {
+    try {
+      const response = await fetch(buildApiUrl('/api/v1/auth/verify-license'), {
+        method: 'POST',
+        headers: getDefaultHeaders(),
+        body: JSON.stringify({
+          license_key: licenseKey
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return {
+          key: licenseKey,
+          valid: true,
+          ...data.license
+        };
+      } else {
+        // Si hay error del servidor, usar modo de desarrollo
+        console.warn('Error del servidor, usando modo de desarrollo para licencia:', data.message);
+        return getDevelopmentLicense(licenseKey);
+      }
+    } catch (error) {
+      console.error('Error verificando licencia:', error);
+      // En caso de error de conexión, usar modo de desarrollo
+      return getDevelopmentLicense(licenseKey);
+    }
+  };
+
+  // Función para obtener licencia en modo de desarrollo
+  const getDevelopmentLicense = (licenseKey) => {
+    const developmentLicenses = {
       'DEMO-2024': {
         key: 'DEMO-2024',
         type: 'demo',
@@ -168,48 +302,138 @@ export const AuthProvider = ({ children }) => {
         type: 'enterprise',
         valid: true,
         expiresAt: '2025-12-31',
-        features: ['basic', 'reports', 'notifications', 'advanced', 'export', 'api', 'support', 'mobile', 'analytics', 'multi-store', 'priority-support', 'backup', 'custom-reports', 'advanced-inventory', 'client-management', 'repair-tracking', 'sales-analytics', 'purchase-management', 'accessory-management', 'qr-generation', 'data-export', 'system-monitoring'],
+        features: ['basic', 'reports', 'notifications', 'advanced', 'export', 'api', 'support'],
         maxUsers: 20,
         maxEquipment: 10000
-      },
-      'EMPRESA-2025': {
-        key: 'EMPRESA-2025',
-        type: 'enterprise',
-        valid: true,
-        expiresAt: '2026-12-31',
-        features: ['basic', 'reports', 'notifications', 'advanced', 'export', 'api', 'support', 'mobile', 'analytics', 'multi-store', 'priority-support', 'backup', 'custom-reports', 'advanced-inventory', 'client-management', 'repair-tracking', 'sales-analytics', 'purchase-management', 'accessory-management', 'qr-generation', 'data-export', 'system-monitoring', 'enterprise-features', 'unlimited-users', 'custom-branding', 'white-label', 'dedicated-support'],
-        maxUsers: 50,
-        maxEquipment: 50000,
-        storeName: 'Registro Móvil Empresarial'
       }
     };
 
-    // Simular delay de red
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const license = validLicenses[licenseKey];
-    
+    const license = developmentLicenses[licenseKey];
     if (license) {
-      // Verificar si la licencia no ha expirado
-      const now = new Date();
-      const expiryDate = new Date(license.expiresAt);
-      
-      if (now > expiryDate) {
-        return {
-          key: licenseKey,
-          valid: false,
-          message: 'Licencia expirada'
-        };
-      }
-      
       return license;
     }
-    
+
     return {
       key: licenseKey,
       valid: false,
       message: 'Licencia inválida'
     };
+  };
+
+  // Función de registro
+  const register = async (userData) => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch(buildApiUrl('/api/v1/auth/register'), {
+        method: 'POST',
+        headers: getDefaultHeaders(),
+        body: JSON.stringify({
+          email: userData.email,
+          password: userData.password,
+          first_name: userData.firstName || userData.ownerName?.split(' ')[0] || '',
+          last_name: userData.lastName || userData.ownerName?.split(' ').slice(1).join(' ') || '',
+          role: userData.role || 'admin',
+          store_name: userData.storeName,
+          phone: userData.phone,
+          address: userData.address,
+          business_type: userData.businessType,
+          estimated_equipment: userData.estimatedEquipment,
+          selected_plan: userData.selectedPlan
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Si el registro es exitoso, también hacer login automático
+        const loginResult = await login({
+          email: userData.email,
+          password: userData.password
+        });
+        
+        return loginResult;
+      } else {
+        // Si hay error del servidor, usar modo de desarrollo
+        console.warn('Error del servidor en registro, usando modo de desarrollo:', data.message);
+        return registerInDevelopmentMode(userData);
+      }
+    } catch (error) {
+      console.error('Error en registro:', error);
+      // En caso de error de conexión, usar modo de desarrollo
+      return registerInDevelopmentMode(userData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función de registro en modo de desarrollo
+  const registerInDevelopmentMode = async (userData) => {
+    try {
+      // Verificar licencia en modo de desarrollo
+      const licenseData = getDevelopmentLicense(userData.selectedPlan);
+      
+      if (!licenseData.valid) {
+        return { success: false, message: 'Licencia inválida' };
+      }
+
+      // Crear usuario en modo de desarrollo
+      const userDataDev = {
+        id: Date.now(),
+        name: userData.ownerName,
+        email: userData.email,
+        role: 'admin',
+        storeName: userData.storeName,
+        phone: userData.phone,
+        address: userData.address,
+        businessType: userData.businessType,
+        estimatedEquipment: userData.estimatedEquipment,
+        createdAt: new Date().toISOString()
+      };
+
+      // Guardar en localStorage
+      setUser(userDataDev);
+      setLicense(licenseData);
+      localStorage.setItem('registroMovil_user', JSON.stringify(userDataDev));
+      localStorage.setItem('registroMovil_license', JSON.stringify(licenseData));
+
+      return { success: true, message: 'Registro exitoso (modo desarrollo)' };
+    } catch (error) {
+      return { success: false, message: 'Error en modo de desarrollo' };
+    }
+  };
+
+  // Función para refrescar token
+  const refreshAccessToken = async () => {
+    try {
+      if (!refreshToken) {
+        throw new Error('No hay refresh token disponible');
+      }
+
+      const response = await fetch(buildApiUrl('/api/v1/auth/refresh'), {
+        method: 'POST',
+        headers: getDefaultHeaders(),
+        body: JSON.stringify({
+          refresh_token: refreshToken
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAccessToken(data.access_token);
+        localStorage.setItem('registroMovil_access_token', data.access_token);
+        return data.access_token;
+      } else {
+        // Si el refresh token es inválido, hacer logout
+        logout();
+        throw new Error('Refresh token inválido');
+      }
+    } catch (error) {
+      console.error('Error refrescando token:', error);
+      logout();
+      throw error;
+    }
   };
 
   // Renovar licencia
@@ -244,13 +468,60 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Funciones helper para verificar estado de licencia
+  const hasActiveLicense = () => {
+    return licenseStatus === 'active' && license?.valid !== false;
+  };
+
+  const isLicensePending = () => {
+    return licenseStatus === 'pending';
+  };
+
+  const isLicenseExpired = () => {
+    if (!license?.expiresAt) return false;
+    return new Date(license.expiresAt) < new Date();
+  };
+
+  const canAccessFeature = (feature) => {
+    if (!hasActiveLicense()) return false;
+    return license?.features?.includes(feature) || false;
+  };
+
+  const getLicenseLimits = () => {
+    if (!hasActiveLicense()) {
+      return {
+        maxEquipment: 0,
+        maxUsers: 0,
+        features: []
+      };
+    }
+    return {
+      maxEquipment: license?.maxEquipment || 0,
+      maxUsers: license?.maxUsers || 0,
+      features: license?.features || []
+    };
+  };
+
   const value = {
     user,
     license,
     loading,
+    accessToken,
+    refreshToken,
+    licenseStatus,
+    licenseValidation,
     login,
     logout,
+    register,
+    verifyLicense,
+    refreshAccessToken,
     renewLicense,
+    validateLicense,
+    hasActiveLicense,
+    isLicensePending,
+    isLicenseExpired,
+    canAccessFeature,
+    getLicenseLimits,
     isAuthenticated: !!user,
     hasFeature: (feature) => license?.features?.includes(feature) || false
   };

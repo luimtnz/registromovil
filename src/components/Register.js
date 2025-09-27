@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import ConnectionStatus from './ConnectionStatus';
 import {
   Container,
   Paper,
@@ -16,7 +18,8 @@ import {
   Stepper,
   Step,
   StepLabel,
-  StepContent
+  StepContent,
+  CircularProgress
 } from '@mui/material';
 import {
   PersonAdd,
@@ -30,6 +33,7 @@ import {
 
 function Register() {
   const navigate = useNavigate();
+  const { register, verifyLicense, loading } = useAuth();
   
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
@@ -46,6 +50,7 @@ function Register() {
   
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [licenseVerification, setLicenseVerification] = useState(null);
 
   const steps = [
     {
@@ -115,15 +120,41 @@ function Register() {
     }
   ];
 
+  const handleLicenseVerification = useCallback(async (licenseKey) => {
+    try {
+      setLicenseVerification({ loading: true });
+      const result = await verifyLicense(licenseKey);
+      setLicenseVerification(result);
+    } catch (error) {
+      setLicenseVerification({ valid: false, message: 'Error verificando licencia' });
+    }
+  }, [verifyLicense]);
+
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError('');
+    
+    // Si se cambia el plan seleccionado, verificar la licencia
+    if (field === 'selectedPlan') {
+      handleLicenseVerification(value);
+    }
   };
+
+  // Verificar licencia inicial
+  useEffect(() => {
+    handleLicenseVerification(formData.selectedPlan);
+  }, [formData.selectedPlan, handleLicenseVerification]);
 
   const handleNext = () => {
     if (activeStep === 0) {
       if (!formData.storeName || !formData.ownerName || !formData.email || !formData.password) {
         setError('Por favor complete todos los campos obligatorios');
+        return;
+      }
+    } else if (activeStep === 1) {
+      // Verificar que la licencia sea válida antes de continuar
+      if (!licenseVerification || !licenseVerification.valid) {
+        setError('Por favor seleccione un plan válido');
         return;
       }
     }
@@ -144,51 +175,37 @@ function Register() {
         return;
       }
       
-      // Simular envío de formulario
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Validar campos obligatorios
+      if (!formData.storeName || !formData.ownerName || !formData.email || !formData.password) {
+        setError('Por favor complete todos los campos obligatorios');
+        return;
+      }
       
-      // Crear usuario con la licencia seleccionada
+      // Preparar datos para el registro
       const userData = {
-        id: Date.now(),
-        name: formData.ownerName,
         email: formData.email,
         password: formData.password,
-        role: 'admin',
+        ownerName: formData.ownerName,
         storeName: formData.storeName,
         phone: formData.phone,
         address: formData.address,
         businessType: formData.businessType,
-        estimatedEquipment: formData.estimatedEquipment,
-        selectedPlan: formData.selectedPlan,
-        createdAt: new Date().toISOString()
+        estimatedEquipment: parseInt(formData.estimatedEquipment) || 0,
+        selectedPlan: formData.selectedPlan
       };
       
-      // Guardar usuario en localStorage
-      localStorage.setItem('registroMovil_user', JSON.stringify(userData));
+      // Llamar a la función de registro del AuthContext
+      const result = await register(userData);
       
-      // Asignar licencia automáticamente según el plan seleccionado
-      const licenseData = {
-        key: formData.selectedPlan,
-        type: formData.selectedPlan.includes('DEMO') ? 'demo' : 
-              formData.selectedPlan.includes('PRO') ? 'professional' : 'enterprise',
-        valid: true,
-        expiresAt: formData.selectedPlan.includes('DEMO') ? 
-          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : // 30 días para demo
-          new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 año para otros
-        features: getSelectedPlan().features || ['basic'],
-        maxUsers: formData.selectedPlan.includes('DEMO') ? 1 : 
-                 formData.selectedPlan.includes('PRO') ? 5 : 20,
-        maxEquipment: getSelectedPlan().maxEquipment || 100,
-        storeName: formData.storeName
-      };
-      
-      localStorage.setItem('registroMovil_license', JSON.stringify(licenseData));
-      
-      setSuccess(`¡Registro exitoso! Su cuenta ha sido creada con el plan ${getSelectedPlan().name}. Redirigiendo al sistema...`);
-      
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 3000);
+      if (result.success) {
+        setSuccess(`¡Registro exitoso! Su cuenta ha sido creada con el plan ${getSelectedPlan().name}. Redirigiendo al sistema...`);
+        
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 3000);
+      } else {
+        setError(result.message);
+      }
     } catch (error) {
       setError('Error al procesar el registro. Intente nuevamente.');
     }
@@ -210,6 +227,11 @@ function Register() {
           <Typography variant="body1" color="textSecondary" sx={{ mt: 1 }}>
             Complete el formulario para obtener acceso al sistema
           </Typography>
+          
+          {/* Estado de conexión */}
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+            <ConnectionStatus />
+          </Box>
         </Box>
 
         <Grid container spacing={4}>
@@ -407,6 +429,31 @@ function Register() {
                                         color="success" 
                                         icon={<CheckCircle />}
                                       />
+                                      
+                                      {/* Estado de verificación de licencia */}
+                                      {licenseVerification && (
+                                        <Box sx={{ mt: 1 }}>
+                                          {licenseVerification.loading ? (
+                                            <Chip 
+                                              label="Verificando..." 
+                                              color="info" 
+                                              icon={<CircularProgress size={16} />}
+                                            />
+                                          ) : licenseVerification.valid ? (
+                                            <Chip 
+                                              label="Licencia Válida" 
+                                              color="success" 
+                                              icon={<CheckCircle />}
+                                            />
+                                          ) : (
+                                            <Chip 
+                                              label={licenseVerification.message || "Licencia Inválida"} 
+                                              color="error" 
+                                              icon={<CheckCircle />}
+                                            />
+                                          )}
+                                        </Box>
+                                      )}
                                     </Box>
                                   )}
                                 </CardContent>
@@ -467,12 +514,17 @@ function Register() {
                         <Button
                           variant="contained"
                           onClick={index === steps.length - 1 ? handleSubmit : handleNext}
+                          disabled={loading}
                           sx={{ mr: 1 }}
                         >
-                          {index === steps.length - 1 ? 'Completar Registro' : 'Continuar'}
+                          {loading ? (
+                            <CircularProgress size={24} color="inherit" />
+                          ) : (
+                            index === steps.length - 1 ? 'Completar Registro' : 'Continuar'
+                          )}
                         </Button>
                         <Button
-                          disabled={index === 0}
+                          disabled={index === 0 || loading}
                           onClick={handleBack}
                           sx={{ mr: 1 }}
                         >

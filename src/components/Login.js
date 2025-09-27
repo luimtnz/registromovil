@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import ConnectionStatus from './ConnectionStatus';
 import {
   Container,
   Paper,
@@ -42,8 +43,7 @@ function Login() {
   
   const [credentials, setCredentials] = useState({
     email: '',
-    password: '',
-    licenseKey: ''
+    password: ''
   });
   
   const [error, setError] = useState('');
@@ -74,8 +74,7 @@ function Login() {
     try {
       const result = await login({
         email: credentials.email,
-        password: credentials.password,
-        licenseKey: credentials.licenseKey || 'AUTO-ASSIGNED'
+        password: credentials.password
       });
       
       if (result.success) {
@@ -137,6 +136,11 @@ function Login() {
           <Typography variant="body1" color="textSecondary" sx={{ mt: 1 }}>
             Acceda a su cuenta para gestionar su inventario
           </Typography>
+          
+          {/* Estado de conexión */}
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+            <ConnectionStatus />
+          </Box>
         </Box>
 
         <Grid container spacing={4}>
@@ -191,18 +195,6 @@ function Login() {
                   }}
                 />
 
-                <TextField
-                  fullWidth
-                  label="Clave de Licencia (Opcional)"
-                  value={credentials.licenseKey}
-                  onChange={(e) => handleChange('licenseKey', e.target.value)}
-                  margin="normal"
-                  placeholder="DEMO-2024 (opcional para usuarios registrados)"
-                  InputProps={{
-                    startAdornment: <VpnKey sx={{ mr: 1, color: 'text.secondary' }} />
-                  }}
-                  helperText="Solo necesario para usuarios administradores. Los usuarios registrados tienen licencia automática."
-                />
 
                 <Button
                   type="submit"
@@ -244,7 +236,7 @@ function Login() {
               </Box>
 
               <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
-                Elija el plan que mejor se adapte a las necesidades de su negocio
+                Los planes disponibles para su cuenta se asignan automáticamente según su registro
               </Typography>
 
               <Grid container spacing={2}>
@@ -259,7 +251,7 @@ function Login() {
                           bgcolor: 'primary.50'
                         }
                       }}
-                      onClick={() => handleChange('licenseKey', license.key)}
+                      onClick={() => {}}
                     >
                       <CardContent>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -286,15 +278,6 @@ function Login() {
                           ))}
                         </Box>
 
-                        {license.key === credentials.licenseKey && (
-                          <Box sx={{ mt: 2, textAlign: 'center' }}>
-                            <Chip 
-                              label="Seleccionado" 
-                              color="success" 
-                              icon={<CheckCircle />}
-                            />
-                          </Box>
-                        )}
                       </CardContent>
                     </Card>
                   </Grid>
